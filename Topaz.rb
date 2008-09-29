@@ -4,7 +4,7 @@ class Topaz
   attr_reader :mostRecentOutput
 
   def initialize(stone)
-    fail "We expect the stone #{stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !stone.isRunning
+    fail "We expect the stone #{stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !stone.running?
     @stone = stone
     @mostRecentOutput = ''
   end
@@ -25,21 +25,25 @@ class Topaz
       IO.popen(commandLine, "w+") do | io | 
         readOutput(io, logFile)
         topazCommands.each do | command |
-          writeIO(io, command, logFile)
+          writeCommand(io, command, logFile)
           readOutput(io, logFile)
 	end
-        writeIO(io, "exit\n", logFile)
+        writeCommand(io, "exit", logFile)
       end
       result = $?
     end
     result
   end
 
-  def writeIO(io, input, logFile)
+  def writeCommand(io, command, logFile)
     selectArray = IO.select(nil, [io], nil, 5)
     fail "IO.select timed out on waiting to write to topaz." if selectArray.nil?
-    logFile.write(input)
-    io.write(input)
+    logFile.write(command)
+    io.write(command)
+    if command[-1] != ?\n then
+      logFile.write("\n")
+      io.write("\n")
+    end
   end
 
   def readOutput(io, logFile, untilMatchString=/^topaz ?\d*> /)
@@ -58,7 +62,7 @@ class Topaz
         mostRecentOutputIO.putc(char)
         lineIO.putc(char)
         logFile.putc(char)
-        return if !untilMatchString.nil? and untilMatchString =~ lineIO.string
+        return if untilMatchString =~ lineIO.string
 	if char == ?\n then
 	  lineIO = StringIO.new
 	end

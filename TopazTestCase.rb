@@ -12,11 +12,12 @@ class TopazTestCase < Test::Unit::TestCase
   end
 
   def test_singleCommand
-    @topaz.commands(["status\n"])
+    @topaz.commands(["status"])
     fail "Output is #{@topaz.mostRecentOutput}" if /^Current settings are\:/ !~ @topaz.mostRecentOutput
   end
 
-  def teardown
-    @stone.stop
+  def test_login
+    @topaz.commands(["set gems #{@stone.name} u DataCurator p swordfish", "login", "commit"])
+    fail "Output is #{@topaz.mostRecentOutput}" if /^Successful commit/ !~ @topaz.mostRecentOutput
   end
 end
