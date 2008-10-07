@@ -1,32 +1,59 @@
+require 'CommandWrapper'
+
 class Stone
-  attr_reader :mostRecentOutput, :name
+  attr_reader :name
+
+  def Stone.create(name)
+    fail "Cannot create stone #{name}: the conf file already exists in /etc/gemstone" if Stone.definedInstances.include?(name)
+    instance = Stone.new(name)
+    instance.createConfFile
+    instance.createLogDirectory
+    instance
+  end
+
+  def Stone.definedInstances
+    Dir.new('/etc/gemstone').inject([]) do | stones, fileName | 
+      if /(\w+)\.conf$/ =~ fileName then 
+	stones.push($1) 
+      end 
+      stones
+    end
+  end
 
   def initialize(name)
-    ENV['GEMSTONE'] = "/usr/local/gemstone"
+    ENV['GEMSTONE'] = "/opt/gemstone/product"
     ENV['PATH'] += ":#{ENV['GEMSTONE']}/bin"
     @name = name
-    @mostRecentOutput = ''
+    @commandWrapper = CommandWrapper.new("#{logDirectory}/Stone.log")
   end
 
   def running?(waitTime = -1)
-    0 == run("waitstone #@name #{waitTime}", false)
+    0 == @commandWrapper.run("waitstone #@name #{waitTime}", false)
   end
 
   def systemConfFileName
-    File.join('/etc/gemstone', @name + '.conf')
+    "/etc/gemstone/#{@name}.conf"
+  end
+
+  def createConfFile
+    File.open(systemConfFileName, "w") do | file | file.write("conf") end
   end
 
   def logDirectory
-    File.join('/var/log/gemstone', @name)
+    "/var/log/gemstone/#{@name}"
+  end
+
+  def createLogDirectory
+    if !File.directory?(logDirectory) then Dir.mkdir(logDirectory) end
   end
 
   def start
-    run("startstone -z #{systemConfFileName} -l #{File.join(logDirectory, @name)}.log #{@name}")
+    @commandWrapper.run("startstone -z #{systemConfFileName} -l #{File.join(logDirectory, @name)}.log #{@name}")
     running?(10)
   end
 
   def stop
-    run("stopstone -i #@name DataCurator swordfish")
+    @commandWrapper.run("stopstone -i #@name DataCurator swordfish")
   end
 
   def restart
@@ -34,36 +61,7 @@ class Stone
     start
   end
 
-  def run(commandLine, failOnNonZeroExitValue=true)
-    firstWord = /\w+/.match(commandLine)[0]
-    puts("#{firstWord}...")
-    commandLineStderrRedirected = "#{commandLine} 2>&1"
-    result = doItNow(commandLineStderrRedirected)
-    fail "\"#{commandLineStderrRedirected}\" failed with exit code #{result}\n#{@mostRecentOutput}" if result != 0 and failOnNonZeroExitValue
-    result
-  end
-
-  def doItNow(commandLine)
-    result = 1
-    File.open("#{logDirectory}/Stone.log", "a") do |logFile| 
-      logFile.sync = true
-      logFile.write(commandLine + "\n")
-      IO.popen(commandLine, "w+") do | io | 
-        readOutput(io, logFile)
-      end
-      result = $?
-    end
-    result
-  end
-
-  def readOutput(io, logFile)
-    @mostRecentOutput = ""
-    begin
-      line = io.gets
-      if !line.nil? then 
-        @mostRecentOutput += line
-        logFile.write(line)
-      end
-    end until line.nil?
+  def delete
+    File.delete(systemConfFileName)
   end
 end
