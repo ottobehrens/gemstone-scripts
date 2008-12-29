@@ -1,5 +1,28 @@
 require 'CommandWrapper'
 
+class GemStone
+
+  def initialize
+    ENV['GEMSTONE'] = "/opt/gemstone/product"
+    ENV['PATH'] += ":#{ENV['GEMSTONE']}/bin"
+  end
+
+  def logDirectory
+    "/var/log/gemstone/#{@name}"
+  end
+
+  def self.stones
+    Stone.definedInstances
+  end
+
+  def self.status
+    system("gslist -clv")
+  end
+
+  def self.start_netldi
+  end
+end
+
 class Stone
   attr_reader :name
 
