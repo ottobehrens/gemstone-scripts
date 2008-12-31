@@ -1,7 +1,4 @@
 require 'CommandWrapper'
-require 'fileutils'
-
-include FileUtils
 
 class GemStone
 
@@ -48,21 +45,29 @@ class Stone
 
   def Stone.existing(name)
     fail "Stone does not exist" if not GemStone.current.stones.include? name
-    Stone.new(name)
+    Stone.new(name, GemStone.current)
   end
 
   def Stone.create(name)
     fail "Cannot create stone #{name}: the conf file already exists in /etc/gemstone" if GemStone.current.stones.include? name
-    instance = Stone.new(name)
+    instance = Stone.new(name, GemStone.current)
     instance.initialize_new_stone
     instance
   end
 
-  def initialize(name)
-    ENV['GEMSTONE'] = GemStone.current.installation_path
-    ENV['PATH'] += ":#{ENV['GEMSTONE']}/bin"
+  def initialize(name, gemstone_environment)
     @name = name
-    @commandWrapper = CommandWrapper.new("#{log_directory}/Stone.log")
+    @command_runner = CommandWrapper.new("#{log_directory}/Stone.log")
+
+    initialize_gemstone_environment(gemstone_environment)
+  end
+
+  def initialize_gemstone_environment(gemstone_environment)
+    @gemstone_environment = gemstone_environment ||= GemStone.current
+
+    ENV['GEMSTONE_NAME'] = @name
+    ENV['GEMSTONE_LOGDIR'] = log_directory
+    ENV['GEMSTONE_DATADIR'] = data_directory
   end
 
   def initialize_new_stone
@@ -74,11 +79,35 @@ class Stone
   end
 
   def running?(waitTime = -1)
-    0 == @commandWrapper.run("waitstone #@name #{waitTime}", false)
+    0 == @command_runner.run("waitstone #@name #{waitTime}", false)
+  end
+
+  def status
+    if running?
+      sh "gslist -clv #@name"
+    else
+      puts "#@name not running"
+    end
+  end
+
+  def start
+    @command_runner.run("startstone -z #{system_config_filename} -l #{File.join(log_directory, @name)}.log #{@name}")
+    running?(10)
+    self
+  end
+
+  def stop
+    @command_runner.run("stopstone -i #@name DataCurator swordfish")
+    self
+  end
+
+  def restart
+    stop
+    start
   end
 
   def system_config_filename
-    "#{GemStone.current.config_directory}/#@name.conf"
+    "#{@gemstone_environment.config_directory}/#@name.conf"
   end
 
   def create_config_file
@@ -110,35 +139,6 @@ class Stone
     "/var/log/gemstone/#{@name}"
   end
 
-  def status
-    if running?
-      sh "gslist -clv #@name"
-    else
-      puts "#@name not running"
-    end
-  end
-
-  def start
-    @commandWrapper.run("startstone -z #{system_config_filename} -l #{File.join(log_directory, @name)}.log #{@name}")
-    running?(10)
-    self
-  end
-
-  def stop
-    @commandWrapper.run("stopstone -i #@name DataCurator swordfish")
-    self
-  end
-
-  def restart
-    stop
-    start
-  end
-
-  def delete
-    File.delete(system_config_filename)
-    self
-  end
-
   def data_directory
     "/var/local/gemstone/#@name"
   end
@@ -146,7 +146,7 @@ class Stone
   private
 
   def initialize_extents
-    install(GemStone.current.initial_extent, extent_filename, :mode => 0660)
+    install(@gemstone_environment.initial_extent, extent_filename, :mode => 0660)
   end
 
 end
