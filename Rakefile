@@ -10,28 +10,27 @@ end
 
 desc "Server status"
 task :status do
-  GemStone.status
+  GemStone.current.status
 end
 
-GemStone.stones.each do |stoneName|
+def task_gemstone(stone, action)
+    desc "#{action.to_s} - #{stone}"
+    task action do
+      stone.send(action)
+    end
+end
+
+GemStone.current.stones.each do |stoneName|
   namespace stoneName do
     stone = Stone.new(stoneName)
 
-    desc "restart - #{stone}"
-    task 'restart' do
-      stone.restart
-    end
+    task_gemstone(stone, :restart)
+    task_gemstone(stone, :status)
 
     if stone.running?
-      desc "stop - #{stone}"
-      task 'stop' do |task|
-        stone.stop
-      end
+      task_gemstone(stone, :stop)
     else
-      desc "start - #{stone}"
-      task 'start' do |task|
-        stone.start
-      end
+      task_gemstone(stone, :start)
     end
   end
 end
