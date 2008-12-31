@@ -30,10 +30,6 @@ class GemStone
     File.join(@installation_path, "bin", "extent0.dbf")
   end
 
-  def logDirectory
-    "/var/log/gemstone/#{@name}"
-  end
-
   def installation_extent_directory
     "/var/local/gemstone"
   end
@@ -66,13 +62,14 @@ class Stone
     ENV['GEMSTONE'] = GemStone.current.installation_path
     ENV['PATH'] += ":#{ENV['GEMSTONE']}/bin"
     @name = name
-    @commandWrapper = CommandWrapper.new("#{logDirectory}/Stone.log")
+    @commandWrapper = CommandWrapper.new("#{log_directory}/Stone.log")
   end
 
   def initialize_new_stone
-    createConfFile
-    createLogDirectory
+    create_config_file
+    mkdir_p log_directory
     mkdir_p extent_directory
+    mkdir_p tranlog_directories
     initialize_extents
   end
 
@@ -84,10 +81,8 @@ class Stone
     "#{GemStone.current.config_directory}/#@name.conf"
   end
 
-  def createConfFile
+  def create_config_file
     require 'erb'
-    tranlog_directories = '/var/local/gemstone/development/tranlog, /var/local/gemstone/development/tranlog'
-    
     File.open(system_config_filename, "w") do | file |
       file.write(ERB.new(File.open("stone.conf.template").readlines.join).result(binding))
     end
@@ -106,12 +101,13 @@ class Stone
     File.join(data_directory, "scratch")
   end
 
-  def logDirectory
-    "/var/log/gemstone/#{@name}"
+  def tranlog_directories
+    directory = File.join(data_directory, "tranlog")
+    [directory, directory]
   end
 
-  def createLogDirectory
-    Dir.mkdir(logDirectory) if !File.directory?(logDirectory)
+  def log_directory
+    "/var/log/gemstone/#{@name}"
   end
 
   def status
@@ -123,7 +119,7 @@ class Stone
   end
 
   def start
-    @commandWrapper.run("startstone -z #{system_config_filename} -l #{File.join(logDirectory, @name)}.log #{@name}")
+    @commandWrapper.run("startstone -z #{system_config_filename} -l #{File.join(log_directory, @name)}.log #{@name}")
     running?(10)
     self
   end
@@ -140,6 +136,7 @@ class Stone
 
   def delete
     File.delete(system_config_filename)
+    self
   end
 
   def data_directory
@@ -152,7 +149,4 @@ class Stone
     install(GemStone.current.initial_extent, extent_filename, :mode => 0660)
   end
 
-  def data_directory
-    File.join(GemStone.current.installation_extent_directory, @name)
-  end
 end

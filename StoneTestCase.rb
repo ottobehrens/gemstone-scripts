@@ -8,7 +8,9 @@ class StoneTestCase < Test::Unit::TestCase
 
   def setup
     if GemStone.current.stones.include? TEST_STONE_NAME
-     Stone.existing(TEST_STONE_NAME).stop.delete
+      stone = Stone.existing(TEST_STONE_NAME)
+      stone.stop.delete
+      rm_rf stone.data_directory
     end
   end
 
@@ -45,18 +47,19 @@ class StoneTestCase < Test::Unit::TestCase
     assert GemStone.current.stones.include?(TEST_STONE_NAME)
     stone.start
     assert stone.running?
-    assert File.directory?(stone.logDirectory)
+    assert File.directory?(stone.log_directory)
   end
 
   def test_create_config_file
     config_filename = "#{GemStone.current.config_directory}/#{TEST_STONE_NAME}.conf"
     assert ! (File.exist? config_filename)
 
-    stone = Stone.new(TEST_STONE_NAME).createConfFile
+    stone = Stone.new(TEST_STONE_NAME).create_config_file
 
     assert File.exists? config_filename
     assert GemStone.current.stones.include?(TEST_STONE_NAME)
     content = File.open(config_filename).readlines.join 
     assert content.include? "DBF_EXTENT_NAMES = #{stone.extent_filename}"
+    assert content.include? "DBF_SCRATCH_DIR = #{stone.scratch_directory}"
   end
 end
