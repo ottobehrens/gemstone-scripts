@@ -1,10 +1,9 @@
 #!/usr/bin/ruby
 
 require 'test/unit'
-require 'Stone'
+require 'stone'
 
 require 'fileutils'
-
 include FileUtils
 
 class StoneTestCase < Test::Unit::TestCase

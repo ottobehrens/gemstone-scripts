@@ -1,4 +1,4 @@
-require 'Stone'
+require 'stone'
 
 task :default => :status
 
@@ -22,7 +22,7 @@ end
 
 GemStone.current.stones.each do |stoneName|
   namespace stoneName do
-    stone = Stone.new(stoneName)
+    stone = Stone.new(stoneName, GemStone.current)
 
     task_gemstone(stone, :restart)
     task_gemstone(stone, :status)
