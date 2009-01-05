@@ -106,6 +106,16 @@ class Stone
     start
   end
 
+  def backup
+    result = @topaz_runner.commands("SystemRepository startNewLog")
+    tranlog_number = (/(\d*)$/.match(result))[1]
+
+    @topaz_runner.commands("SystemRepository startCheckpointSync")
+    @topaz_runner.commands("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{extend_backup_filename}'")
+
+    @command_runner.run("tar zcf #{backup_filename} #{extend_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf")
+  end
+
   def system_config_filename
     "#{@gemstone_environment.config_directory}/#@name.conf"
   end
@@ -141,6 +151,18 @@ class Stone
 
   def data_directory
     "/var/local/gemstone/#@name"
+  end
+
+  def backup_directory
+    "/var/local/backups"
+  end
+
+  def backup_filename
+    "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.bak.tgz"
+  end
+
+  def extend_backup_filename
+    "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.full.gz"
   end
 
   private
