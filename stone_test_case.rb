@@ -35,15 +35,15 @@ class StoneTestCase < Test::Unit::TestCase
     assert stone.running?
   end
 
-  def notest_restart
-    @instance = Stone.existing TEST_STONE_NAME
-    @instance.start
-    @instance.restart
-    assert @instance.running?
+  def test_restart
+    stone = Stone.create TEST_STONE_NAME
+    stone.start
+    stone.restart
+    assert stone.running?
     # restart can be a nop and this will still pass. How do I test it? Change a config & restart?
-    @instance.stop
-    @instance.restart
-    assert @instance.running?
+    stone.stop
+    stone.restart
+    assert stone.running?
   end
 
   def test_stop_not_running
