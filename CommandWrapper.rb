@@ -8,7 +8,7 @@ class CommandWrapper
 
   def run(commandLine, failOnNonZeroExitValue=true, inputCommands=[])
     firstWord = /\w+/.match(commandLine)[0]
-    puts("#{firstWord}...")
+    puts("#{commandLine}")
     commandLineStderrRedirected = "#{commandLine} 2>&1"
     result = doItNow(commandLineStderrRedirected, inputCommands)
     fail "\"#{commandLineStderrRedirected}\" failed with exit code #{result}\n#{@output[-1]}" if result != 0 and failOnNonZeroExitValue

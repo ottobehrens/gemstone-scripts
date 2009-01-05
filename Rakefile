@@ -12,7 +12,17 @@ end
 
 desc "Server status"
 task :status do
-  GemStone.status
+  GemStone.current.status
+end
+
+desc "Start netldi"
+task :stopnetldi do
+  GemStone.current.stopnetldi
+end
+
+desc "Start netldi"
+task :startnetldi do
+  GemStone.current.startnetldi
 end
 
 def task_gemstone(stone, action)

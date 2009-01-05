@@ -6,10 +6,6 @@ class GemStone
     self.new("/opt/gemstone/product")
   end
 
-  def self.status
-    system("gslist -clv")
-  end
-
   def initialize(installation_path)
     @installation_path = installation_path
 
@@ -21,6 +17,19 @@ class GemStone
     Dir.glob("#{config_directory}/*").collect do | full_filename |
       File.basename(full_filename).split(".").first 
     end
+  end
+
+  def status
+    system("gslist -clv")
+  end
+
+
+  def stopnetldi
+    system("stopnetldi")
+  end
+
+  def startnetldi
+    system("startnetldi")
   end
 
   def initial_extent

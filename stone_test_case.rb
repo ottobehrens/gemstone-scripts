@@ -32,6 +32,8 @@ class StoneTestCase < Test::Unit::TestCase
     end
   end
 
+  def test_abstract
+  end
 end
 
 class StoneUnitTestCase < StoneTestCase
@@ -59,6 +61,15 @@ class StoneIntegrationTestCase < StoneTestCase
     rm stone.backup_filename if File.exist? stone.backup_filename
     stone.backup
     assert File.exist? stone.backupfilename
+  end
+
+  def test_netldi
+    `stopnetldi`
+    assert `gslist` !~ /^exists.*Netldi/
+    GemStone.current.startnetldi
+    assert `gslist` =~ /^exists.*Netldi/
+    GemStone.current.stopnetldi
+    assert `gslist` !~ /^exists.*Netldi/
   end
 
   def test_create_new
