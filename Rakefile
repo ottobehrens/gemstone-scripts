@@ -1,6 +1,8 @@
 require 'stone'
 
-task :default => :status
+task :default do
+  puts "Tasks for managing GemStone"
+end
 
 desc "Create a new stone"
 task :new_stone, :stone_name do |t, args|
@@ -10,7 +12,7 @@ end
 
 desc "Server status"
 task :status do
-  GemStone.current.status
+  GemStone.status
 end
 
 def task_gemstone(stone, action)
@@ -34,4 +36,3 @@ GemStone.current.stones.each do |stoneName|
     end
   end
 end
-
