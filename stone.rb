@@ -30,7 +30,7 @@ class GemStone
   end
 
   def startnetldi
-    system("startnetldi")
+    system("startnetldi -g")
   end
 
   def initial_extent
