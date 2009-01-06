@@ -59,6 +59,7 @@ class StoneIntegrationTestCase < StoneTestCase
   def notest_backup
     stone = Stone.create(TEST_STONE_NAME)
     rm stone.backup_filename if File.exist? stone.backup_filename
+    stone.start
     stone.backup
     assert File.exist? stone.backupfilename
   end

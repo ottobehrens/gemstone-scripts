@@ -1,4 +1,5 @@
 require 'CommandWrapper'
+require 'Topaz'
 
 class GemStone
 
@@ -50,7 +51,7 @@ class GemStone
 end
 
 class Stone
-  attr_reader :name
+  attr_reader :name, :user_name, :password
 
   def Stone.existing(name)
     fail "Stone does not exist" if not GemStone.current.stones.include? name
@@ -67,6 +68,7 @@ class Stone
   def initialize(name, gemstone_environment)
     @name = name
     @command_runner = CommandWrapper.new("#{log_directory}/Stone.log")
+    @topaz_runner = Topaz.new(self)
 
     initialize_gemstone_environment(gemstone_environment)
   end
@@ -135,6 +137,14 @@ class Stone
       file.write(ERB.new(File.open("stone.conf.template").readlines.join).result(binding))
     end
     self
+  end
+
+  def user_name
+    "DataCurator"
+  end
+
+  def password
+    "swordfish"
   end
 
   def extent_directory
