@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 require 'test/unit'
-require 'Topaz'
+require 'topaz'
 require 'stone'
 
 require 'rake'

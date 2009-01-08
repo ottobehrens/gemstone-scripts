@@ -1,5 +1,5 @@
 require 'CommandWrapper'
-require 'Topaz'
+require 'topaz'
 
 class GemStone
 
