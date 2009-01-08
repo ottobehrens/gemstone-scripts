@@ -2,16 +2,19 @@
 
 require 'test/unit'
 require 'Topaz'
-require 'Stone'
+require 'stone'
+
+require 'rake'
+include FileUtils
 
 class TopazTestCase < Test::Unit::TestCase
   def setup
-    @stone = Stone.existing('otto')
+    @stone = Stone.existing('topaz_testing')
     @stone.start
     @topaz = Topaz.new(@stone)
   end
 
-  def test_singleCommand
+  def test_single_command
     @topaz.commands(["status", "exit"])
     fail "Output is #{@topaz.output[1]}" if /^Current settings are\:/ !~ @topaz.output[1]
   end
