@@ -1,15 +1,21 @@
 #!/usr/bin/ruby
 
-require 'test/unit'
 require 'topaz'
 require 'stone'
 
+require 'test/unit'
 require 'rake'
 include FileUtils
 
+TEST_STONE_NAME = 'testcase'
+
 class TopazTestCase < Test::Unit::TestCase
   def setup
-    @stone = Stone.existing('topaz_testing')
+    if not GemStone.current.stones.include? TEST_STONE_NAME
+      @stone = Stone.create(TEST_STONE_NAME)
+    else
+      @stone = Stone.existing(TEST_STONE_NAME)
+    end
     @stone.start
     @topaz = Topaz.new(@stone)
   end
