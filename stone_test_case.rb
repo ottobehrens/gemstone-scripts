@@ -82,6 +82,15 @@ class StoneIntegrationTestCase < StoneTestCase
     assert File.directory?(stone.log_directory)
   end
 
+  def test_destroy
+    stone = Stone.create(TEST_STONE_NAME)
+    stone.start
+    assert_raises(RuntimeError) { stone.destroy! }
+    stone.stop
+    stone.destroy!
+    assert ! (File.exist? stone.extent_directory)
+  end
+
   def test_existing_stone_retrieve
     Stone.create TEST_STONE_NAME
     stone = Stone.existing TEST_STONE_NAME

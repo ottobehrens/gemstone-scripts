@@ -81,10 +81,19 @@ class Stone
 
   def initialize_new_stone
     create_config_file
-    mkdir_p log_directory
     mkdir_p extent_directory
+    mkdir_p log_directory
     mkdir_p tranlog_directories
     initialize_extents
+  end
+
+  # Will remove everything in the stone's data directory!
+  def destroy!
+    fail "Can not destroy a running stone" if running?
+    rm_rf system_config_filename
+    rm_rf extent_directory
+    rm_rf log_directory
+    rm_rf tranlog_directories
   end
 
   def running?(waitTime = -1)
