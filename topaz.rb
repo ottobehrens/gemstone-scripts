@@ -4,7 +4,7 @@ require 'expect'
 class Topaz
   attr_accessor :output
 
-  def initialize(stone, topaz_command="topaz")
+  def initialize(stone, topaz_command="topazl")
     @stone = stone
     @output = []
     @topaz_command = "#{topaz_command} 2>&1"
@@ -24,8 +24,9 @@ class Topaz
   private
 
   def consume_until_prompt(io)
-    if result = io.expect(/.*> $/)
-      @output << result[0]
+    if result = io.expect(/(^.*> $)/)
+      # remove prompt from output
+      @output << result[0].gsub(result[1], "")
     end
   end
 end
