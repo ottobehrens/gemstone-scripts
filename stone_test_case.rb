@@ -37,16 +37,17 @@ class StoneTestCase < Test::Unit::TestCase
 end
 
 class StoneUnitTestCase < StoneTestCase
-  def notest_backup
+  def test_backup
     stone = Stone.create(TEST_STONE_NAME)
     mock_command_runner = flexmock('command')
     mock_topaz_runner = flexmock('topaz')
 
     log_number = "1313"
 
-    mock_topaz_runner.should_receive(:commands).with("SystemRepository startNewLog").and_return("[4202 sz:0 cls: 74241 SmallInteger] #{log_number}").once.ordered
-    mock_topaz_runner.should_receive(:commands).with("SystemRepository startCheckpointSync").once.ordered
-    mock_topaz_runner.should_receive(:commands).with("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full.gz'").once.ordered
+    mock_topaz_runner.should_receive(:commands).with(/SystemRepository startNewLog/).and_return(["[4202 sz:0 cls: 74241 SmallInteger] #{log_number}"]).once.ordered
+    mock_topaz_runner.should_receive(:commands).with(/System startCheckpointSync/).once.ordered
+    expected_backup_path = "#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full.gz"
+    mock_topaz_runner.should_receive(:commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_path}'/).once.ordered
     mock_command_runner.should_receive(:run).with("tar zcf #{stone.backup_filename} #{stone.extend_backup_filename} #{stone.data_directory}/tranlog/tranlog#{log_number}.dbf").once.ordered
     
     stone.override_runners(mock_command_runner, mock_topaz_runner)
