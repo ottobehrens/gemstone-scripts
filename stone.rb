@@ -20,16 +20,16 @@ class GemStone
   end
 
   def status
-    system("gslist -clv")
+    sh "gslist -clv"
   end
 
 
   def stopnetldi
-    system("stopnetldi")
+    sh "stopnetldi"
   end
 
   def startnetldi
-    system("startnetldi -g")
+    sh "startnetldi -g"
   end
 
   def initial_extent
@@ -54,12 +54,12 @@ class Stone
 
   def Stone.existing(name)
     fail "Stone does not exist" if not GemStone.current.stones.include? name
-    Stone.new(name, GemStone.current)
+    new(name, GemStone.current)
   end
 
   def Stone.create(name)
     fail "Cannot create stone #{name}: the conf file already exists in /etc/gemstone" if GemStone.current.stones.include? name
-    instance = Stone.new(name, GemStone.current)
+    instance = new(name, GemStone.current)
     instance.initialize_new_stone
     instance
   end
@@ -79,6 +79,7 @@ class Stone
     ENV['GEMSTONE_DATADIR'] = data_directory
   end
 
+  # Bare bones stone with nothing loaded
   def initialize_new_stone
     create_config_file
     mkdir_p extent_directory

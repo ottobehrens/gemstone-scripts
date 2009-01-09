@@ -1,34 +1,22 @@
 #!/usr/bin/ruby
 
+require 'stone'
+
 require 'rubygems'
+require 'common_test_case'
 require 'date'
 
 require 'test/unit'
-require 'flexmock/test_unit'
-require 'stone'
 
 # To get to FileUtils.sh
 require 'rake'
 verbose(false)
 
-class Stone
-  include FlexMock::TestCase
-  
-  def override_topaz_runner(topaz_runner)
-    @topaz_runner = topaz_runner
-  end
-end
-
-class StoneTestCase < Test::Unit::TestCase
+class StoneTestCase < BaseTestCase
   TEST_STONE_NAME = 'testcase'
 
   def setup
-    if GemStone.current.stones.include? TEST_STONE_NAME
-      stone = Stone.existing(TEST_STONE_NAME)
-      stone.stop
-      rm stone.system_config_filename
-      rm_rf stone.data_directory
-    end
+    clear_stone(TEST_STONE_NAME)
   end
 
   def test_abstract
