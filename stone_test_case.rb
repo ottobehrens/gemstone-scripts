@@ -7,15 +7,14 @@ require 'test/unit'
 require 'flexmock/test_unit'
 require 'stone'
 
-require 'fileutils'
-include FileUtils
-
+# To get to FileUtils.sh
+require 'rake'
+verbose(false)
 
 class Stone
   include FlexMock::TestCase
   
-  def override_runners(command_runner, topaz_runner)
-    @command_runner = command_runner
+  def override_topaz_runner(topaz_runner)
     @topaz_runner = topaz_runner
   end
 end
@@ -39,8 +38,8 @@ end
 class StoneUnitTestCase < StoneTestCase
   def test_backup
     stone = Stone.create(TEST_STONE_NAME)
-    mock_command_runner = flexmock('command')
     mock_topaz_runner = flexmock('topaz')
+    partial_mock_stone = flexmock(stone)
 
     log_number = "1313"
 
@@ -48,9 +47,9 @@ class StoneUnitTestCase < StoneTestCase
     mock_topaz_runner.should_receive(:commands).with(/System startCheckpointSync/).once.ordered
     expected_backup_path = "#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full.gz"
     mock_topaz_runner.should_receive(:commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_path}'/).once.ordered
-    mock_command_runner.should_receive(:run).with("tar zcf #{stone.backup_filename} #{stone.extend_backup_filename} #{stone.data_directory}/tranlog/tranlog#{log_number}.dbf").once.ordered
+    partial_mock_stone.should_receive(:log_sh).with("tar zcf #{stone.backup_filename} #{stone.extend_backup_filename} #{stone.data_directory}/tranlog/tranlog#{log_number}.dbf").once.ordered
     
-    stone.override_runners(mock_command_runner, mock_topaz_runner)
+    stone.override_topaz_runner(mock_topaz_runner)
     stone.backup
   end
 end

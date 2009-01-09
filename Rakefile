@@ -1,5 +1,8 @@
 require 'stone'
 
+# Set to true to see what commands gets executed
+verbose(false)
+
 task :default do
   puts "Tasks for managing GemStone"
 end
@@ -26,7 +29,7 @@ task :startnetldi do
 end
 
 def task_gemstone(stone, action)
-    desc "#{action.to_s} - #{stone}"
+    desc "#{action.to_s} - #{stone.name}"
     task action do
       stone.send(action)
     end
@@ -36,13 +39,8 @@ GemStone.current.stones.each do |stoneName|
   namespace stoneName do
     stone = Stone.new(stoneName, GemStone.current)
 
-    task_gemstone(stone, :restart)
-    task_gemstone(stone, :status)
-
-    if stone.running?
-      task_gemstone(stone, :stop)
-    else
-      task_gemstone(stone, :start)
+    [:stop, :start, :restart, :status].each do |action|
+      task_gemstone(stone, action)
     end
   end
 end

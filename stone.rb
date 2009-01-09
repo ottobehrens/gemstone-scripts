@@ -1,4 +1,3 @@
-require 'CommandWrapper'
 require 'topaz'
 
 class GemStone
@@ -67,7 +66,6 @@ class Stone
 
   def initialize(name, gemstone_environment)
     @name = name
-    @command_runner = CommandWrapper.new("#{log_directory}/Stone.log")
     @topaz_runner = Topaz.new(self)
 
     initialize_gemstone_environment(gemstone_environment)
@@ -90,7 +88,9 @@ class Stone
   end
 
   def running?(waitTime = -1)
-    0 == @command_runner.run("waitstone #@name #{waitTime}", false)
+    sh "waitstone #@name #{waitTime} 1>/dev/null" do | ok, status |
+      return ok
+    end
   end
 
   def status
@@ -102,13 +102,13 @@ class Stone
   end
 
   def start
-    @command_runner.run("startstone -z #{system_config_filename} -l #{File.join(log_directory, @name)}.log #{@name}")
+    log_sh "startstone -z #{system_config_filename} -l #{File.join(log_directory, @name)}.log #{@name}"
     running?(10)
     self
   end
 
   def stop
-    @command_runner.run("stopstone -i #@name DataCurator swordfish")
+    log_sh "stopstone -i #@name DataCurator swordfish"
     self
   end
 
@@ -124,7 +124,7 @@ class Stone
     run_topaz_command("System startCheckpointSync")
     run_topaz_command("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{extend_backup_filename}'")
 
-    @command_runner.run("tar zcf #{backup_filename} #{extend_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf")
+    log_sh "tar zcf #{backup_filename} #{extend_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
   end
 
   def system_config_filename
@@ -172,6 +172,10 @@ class Stone
     "#{log_directory}/topaz.log"
   end
 
+  def command_logfile
+    "#{log_directory}/stone_command_output.log"
+  end
+
   def data_directory
     "/var/local/gemstone/#@name"
   end
@@ -189,6 +193,11 @@ class Stone
   end
 
   private
+
+  def log_sh(command_line)
+    sh "echo '#{command_line}' > #{command_logfile}"
+    sh "#{command_line} 2>&1 >> #{command_logfile}"
+  end
 
   def initialize_extents
     install(@gemstone_environment.initial_extent, extent_filename, :mode => 0660)
