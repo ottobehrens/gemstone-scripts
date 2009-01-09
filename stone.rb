@@ -118,11 +118,12 @@ class Stone
   end
 
   def backup
-    result = @topaz_runner.commands("SystemRepository startNewLog")
-    tranlog_number = (/(\d*)$/.match(result))[1]
+    result = run_topaz_command("SystemRepository startNewLog")
+    puts result[-1]
+    tranlog_number = (/(\d*)$/.match(result[-1]))[1]
 
-    @topaz_runner.commands("SystemRepository startCheckpointSync")
-    @topaz_runner.commands("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{extend_backup_filename}'")
+    run_topaz_command("System startCheckpointSync")
+    run_topaz_command("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{extend_backup_filename}'")
 
     @command_runner.run("tar zcf #{backup_filename} #{extend_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf")
   end
@@ -168,12 +169,16 @@ class Stone
     "/var/log/gemstone/#{@name}"
   end
 
+  def topaz_logfile
+    "#{log_directory}/topaz.log"
+  end
+
   def data_directory
     "/var/local/gemstone/#@name"
   end
 
   def backup_directory
-    "/var/local/backups"
+    "/var/backups/gemstone"
   end
 
   def backup_filename
@@ -190,4 +195,23 @@ class Stone
     install(@gemstone_environment.initial_extent, extent_filename, :mode => 0660)
   end
 
+  def run_topaz_command(command)
+    topaz_commands(["run", command, "%"].join("\n"))
+  end
+
+  def topaz_commands(commands)
+    script = [
+              "output append #{topaz_logfile}",
+              "set u #{user_name} p #{password} gemstone #{name}",
+              "login",
+              "limit oops 100",
+              "limit bytes 1000",
+              "display oops",
+              "iferror stack",
+              commands,
+              "output pop",
+              "exit"
+             ].flatten
+    @topaz_runner.commands(script)
+  end
 end

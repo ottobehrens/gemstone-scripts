@@ -37,7 +37,7 @@ class StoneTestCase < Test::Unit::TestCase
 end
 
 class StoneUnitTestCase < StoneTestCase
-  def test_backup
+  def notest_backup
     stone = Stone.create(TEST_STONE_NAME)
     mock_command_runner = flexmock('command')
     mock_topaz_runner = flexmock('topaz')
@@ -56,7 +56,7 @@ end
 
 class StoneIntegrationTestCase < StoneTestCase
 
-  def notest_backup
+  def test_backup
     stone = Stone.create(TEST_STONE_NAME)
     rm stone.backup_filename if File.exist? stone.backup_filename
     stone.start

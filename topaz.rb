@@ -19,6 +19,7 @@ class Topaz
         consume_until_prompt(io)
       end
     end
+    return @output
   end
 
   private
