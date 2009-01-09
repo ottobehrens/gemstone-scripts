@@ -119,8 +119,7 @@ class Stone
 
   def backup
     result = run_topaz_command("SystemRepository startNewLog")
-    puts result[-1]
-    tranlog_number = (/(\d*)$/.match(result[-1]))[1]
+    tranlog_number = (/(\d*)$/.match(result.last))[1]
 
     run_topaz_command("System startCheckpointSync")
     run_topaz_command("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{extend_backup_filename}'")

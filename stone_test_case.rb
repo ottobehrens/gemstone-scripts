@@ -61,7 +61,7 @@ class StoneIntegrationTestCase < StoneTestCase
     rm stone.backup_filename if File.exist? stone.backup_filename
     stone.start
     stone.backup
-    assert File.exist? stone.backupfilename
+    assert File.exist? stone.backup_filename
   end
 
   def test_netldi

@@ -20,6 +20,7 @@ class Topaz
       end
     end
     return @output
+
   end
 
   private
@@ -27,7 +28,8 @@ class Topaz
   def consume_until_prompt(io)
     if result = io.expect(/(^.*> $)/)
       # remove prompt from output
-      @output << result[0].gsub(result[1], "")
+      command_output = result[0].gsub(result[1], "")
+      @output << command_output if not command_output.empty?
     end
   end
 end
