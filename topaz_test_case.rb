@@ -29,4 +29,8 @@ class TopazTestCase < Test::Unit::TestCase
     @topaz.commands(["set gems #{@stone.name} u DataCurator p swordfish", "login", "exit"])
     fail "Output is #{@topaz.output[2]}" if /^successful login/ !~ @topaz.output[2]
   end
+  
+  def test_fail
+    assert_raises(TopazError) { @topaz.commands(["an invalid command"]) }
+  end
 end

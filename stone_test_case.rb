@@ -19,8 +19,6 @@ class StoneTestCase < BaseTestCase
     clear_stone(TEST_STONE_NAME)
   end
 
-  def test_abstract
-  end
 end
 
 class StoneUnitTestCase < StoneTestCase
@@ -40,16 +38,47 @@ class StoneUnitTestCase < StoneTestCase
     stone.override_topaz_runner(mock_topaz_runner)
     stone.backup
   end
+
+  def test_restore
+    stone = Stone.create(TEST_STONE_NAME)
+    mock_topaz_runner = flexmock('topaz')
+    partial_mock_stone = flexmock(stone)
+    
+    partial_mock_stone.should_receive(:log_sh).with("tar -C '#{stone.backup_directory}' -zxf '#{stone.backup_filename}'").once.ordered
+    mock_topaz_runner.should_receive(:commands).with(/SystemRepository restoreFromBackup: '#{stone.extend_backup_filename}'/).once.ordered
+    # restore from logs as well TODO
+    stone.override_topaz_runner(mock_topaz_runner)
+    stone.restore
+  end
 end
 
 class StoneIntegrationTestCase < StoneTestCase
 
   def test_backup
     stone = Stone.create(TEST_STONE_NAME)
+    rm stone.extend_backup_filename if File.exist? stone.extend_backup_filename
     rm stone.backup_filename if File.exist? stone.backup_filename
     stone.start
     stone.backup
     assert File.exist? stone.backup_filename
+  end
+
+  def notest_restore
+    stone = Stone.create(TEST_STONE_NAME)
+    stone.start
+    stone.run_topaz_commands([
+                              'set class String', 
+                              'set category for-integration-testing',
+                              'classmethod:',
+                              'restoreWorked',
+                              " ^ 'yay restore'",
+                              '%',
+                              'commit'
+                             ]
+                             )
+    stone.backup
+    stone.restore
+    stone.run_topaz_command('String restoasssreWorked')
   end
 
   def test_netldi

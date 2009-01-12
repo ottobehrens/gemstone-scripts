@@ -10,6 +10,9 @@ class BaseTestCase < Test::Unit::TestCase
       rm_rf stone.data_directory
     end
   end
+
+  def test_abstract
+  end
 end
 
 class Stone

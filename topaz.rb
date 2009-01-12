@@ -1,6 +1,15 @@
 require 'stone'
 require 'expect'
 
+class TopazError < RuntimeError
+  attr_accessor :exit_status, :output
+
+  def initialize(exit_status, output)
+    @exit_status = exit_status
+    @output = output
+  end
+end
+
 class Topaz
   attr_accessor :output
 
@@ -19,8 +28,10 @@ class Topaz
         consume_until_prompt(io)
       end
     end
+    if $?.exitstatus > 0
+      raise TopazError.new($?, @output)
+    end
     return @output
-
   end
 
   private

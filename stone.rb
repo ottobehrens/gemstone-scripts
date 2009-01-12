@@ -137,6 +137,11 @@ class Stone
     log_sh "tar zcf #{backup_filename} #{extend_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
   end
 
+  def restore
+    log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename}'"
+    run_topaz_command("SystemRepository restoreFromBackup: '#{extend_backup_filename}'")
+  end
+
   def system_config_filename
     "#{@gemstone_environment.config_directory}/#@name.conf"
   end
@@ -202,6 +207,14 @@ class Stone
     "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.full.gz"
   end
 
+  def run_topaz_command(command)
+    run_topaz_commands(command)
+  end
+
+  def run_topaz_commands(commands)
+    topaz_commands(["run", commands, "%"].join("\n"))
+  end
+
   private
 
   def log_sh(command_line)
@@ -211,10 +224,6 @@ class Stone
 
   def initialize_extents
     install(@gemstone_environment.initial_extent, extent_filename, :mode => 0660)
-  end
-
-  def run_topaz_command(command)
-    topaz_commands(["run", command, "%"].join("\n"))
   end
 
   def topaz_commands(commands)
