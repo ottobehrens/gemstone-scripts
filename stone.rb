@@ -215,7 +215,6 @@ class Stone
     topaz_commands(["run", commands, "%"].join("\n"))
   end
 
-  private
 
   def log_sh(command_line)
     sh "echo '#{command_line}' > #{command_logfile}"

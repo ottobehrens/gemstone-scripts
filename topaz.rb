@@ -4,6 +4,12 @@ require 'expect'
 class TopazError < RuntimeError
   attr_accessor :exit_status, :output
 
+  def to_s
+    # Get the child's exit code
+    puts @exit_status >> 8
+    puts @output
+  end
+
   def initialize(exit_status, output)
     @exit_status = exit_status
     @output = output

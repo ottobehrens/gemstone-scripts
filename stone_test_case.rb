@@ -56,29 +56,20 @@ class StoneIntegrationTestCase < StoneTestCase
 
   def test_backup
     stone = Stone.create(TEST_STONE_NAME)
-    rm stone.extend_backup_filename if File.exist? stone.extend_backup_filename
-    rm stone.backup_filename if File.exist? stone.backup_filename
+    remove_previous_backup_files(stone)
     stone.start
     stone.backup
     assert File.exist? stone.backup_filename
   end
 
-  def notest_restore
+  def test_restore
     stone = Stone.create(TEST_STONE_NAME)
     stone.start
-    stone.run_topaz_commands([
-                              'set class String', 
-                              'set category for-integration-testing',
-                              'classmethod:',
-                              'restoreWorked',
-                              " ^ 'yay restore'",
-                              '%',
-                              'commit'
-                             ]
-                             )
+    add_restore_worked_method(stone)
+    remove_previous_backup_files(stone)
     stone.backup
     stone.restore
-    stone.run_topaz_command('String restoasssreWorked')
+    stone.run_topaz_command('String restoreWorked')
   end
 
   def test_netldi
@@ -158,4 +149,25 @@ class StoneIntegrationTestCase < StoneTestCase
     assert content.include? "STN_TRAN_LOG_DIRECTORIES = #{stone.tranlog_directories.join(",")}"
   end
 
+  private
+  
+  def remove_previous_backup_files(stone)
+    rm stone.extend_backup_filename if File.exist? stone.extend_backup_filename
+    rm stone.backup_filename if File.exist? stone.backup_filename
+  end
+
+  def add_restore_worked_method(stone)
+    # Temp, until a stone is probable new'ed
+    stone.run_topaz_command('GsPackageLibrary installPackage: (GsPackageLibrary createPackageNamed: #SessionMethods). System commitTransaction.')
+
+    stone.topaz_commands([
+                          'set class String', 
+                          'set category for-integration-testing',
+                          ['classmethod:',
+                           'restoreWorked',
+                           " ^ 'yay restore worked'",
+                           '%'].join("\n"),
+                          'commit'
+                         ])
+  end
 end
