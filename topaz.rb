@@ -16,6 +16,18 @@ class TopazError < RuntimeError
   end
 end
 
+class String
+  def execute_on_topaz_stream(topaz_stream)
+    topaz_stream.puts(self)
+  end
+end
+
+class Array
+  def execute_on_topaz_stream(topaz_stream)
+    join("\n").execute_on_topaz_stream(topaz_stream)
+  end
+end
+
 class Topaz
   attr_accessor :output
 
@@ -25,12 +37,12 @@ class Topaz
     @topaz_command = "#{topaz_command} 2>&1"
   end
 
-  def commands(topaz_commands)
+  def commands(*topaz_commands)
     fail "We expect the stone #{@stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !@stone.running?
     IO.popen(@topaz_command, "w+") do |io|
       consume_until_prompt(io)
       topaz_commands.each do | command |
-        io.puts command
+        command.execute_on_topaz_stream(io)
         consume_until_prompt(io)
       end
     end
@@ -38,6 +50,14 @@ class Topaz
       raise TopazError.new($?, @output)
     end
     return @output
+  end
+  
+  def dump_as_script(*topaz_commands)
+    topaz_commands.each do | command |
+      puts "Feed"
+      command.execute_on_topaz_stream(STDOUT)
+    end
+    self
   end
 
   private

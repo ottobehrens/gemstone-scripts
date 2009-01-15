@@ -132,10 +132,11 @@ class Stone
 
   def backup
     result = run_topaz_command("SystemRepository startNewLog")
-    tranlog_number = (/(\d*)$/.match(result.last))[1]
+    tranlog_number = ((/(\d*)$/.match(result.last))[1]).to_i
+    fail if tranlog_number < 0
 
     run_topaz_command("System startCheckpointSync")
-    run_topaz_command("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{extent_backup_filename}'")
+    run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{extent_backup_filename}'")
 
     log_sh "tar zcf #{backup_filename} #{extent_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
   end
@@ -205,12 +206,12 @@ class Stone
     run_topaz_commands(command)
   end
 
-  def run_topaz_commands(commands)
-    topaz_commands(["run", commands, "%"].join("\n"))
+  def run_topaz_commands(*commands)
+    topaz_commands(["run", commands.join(". "), "%"])
   end
 
   def log_sh(command_line)
-    sh "echo '#{command_line}' > #{command_logfile}"
+    sh "echo 'SHELL_CMD #{Date.today.strftime('%F %T')}: #{command_line}' >> #{command_logfile}"
     sh "#{command_line} 2>&1 >> #{command_logfile}"
   end
 
@@ -219,18 +220,15 @@ class Stone
   end
 
   def topaz_commands(commands)
-    script = [
-              "output append #{topaz_logfile}",
-              "set u #{user_name} p #{password} gemstone #{name}",
-              "login",
-              "limit oops 100",
-              "limit bytes 1000",
-              "display oops",
-              "iferror stack",
-              commands,
-              "output pop",
-              "exit"
-             ].flatten
-    Topaz.new(self).commands(script)
+    Topaz.new(self).commands("output append #{topaz_logfile}",
+                             "set u #{user_name} p #{password} gemstone #{name}",
+                             "login",
+                             "limit oops 100",
+                             "limit bytes 1000",
+                             "display oops",
+                             "iferror stack",
+                             commands,
+                             "output pop",
+                             "exit")
   end
 end
