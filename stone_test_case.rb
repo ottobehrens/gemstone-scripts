@@ -4,12 +4,9 @@ require 'stone'
 require 'common_test_case'
 
 class StoneTestCase < BaseTestCase
-  TEST_STONE_NAME = 'testcase'
-
   def setup
     clear_stone(TEST_STONE_NAME)
   end
-
 end
 
 class StoneUnitTestCase < StoneTestCase
@@ -28,14 +25,16 @@ class StoneUnitTestCase < StoneTestCase
     stone.backup
   end
 
-  def notest_restore
+  def test_restore
     stone = Stone.create(TEST_STONE_NAME)
     partial_mock_stone = flexmock(stone)
     
     partial_mock_stone.should_receive(:log_sh).with("tar -C '#{stone.backup_directory}' -zxf '#{stone.backup_filename}'").once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository restoreFromBackup: '#{stone.extend_backup_filename}'/).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository restoreFromCurrentLogs/).and_return('Restore from transaction log(s) succeeded').once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository commitRestore/).and_return('commitRestore succeeded').once.ordered
+
     stone.restore
-    #fail "Restore from logs as well"
   end
 end
 

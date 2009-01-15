@@ -3,19 +3,12 @@
 require 'topaz'
 require 'stone'
 
-require 'test/unit'
-require 'rake'
-include FileUtils
+require 'common_test_case'
 
-TEST_STONE_NAME = 'testcase'
-
-class TopazTestCase < Test::Unit::TestCase
+class TopazTestCase < BaseTestCase
   def setup
-    if not GemStoneInstallation.current.stones.include? TEST_STONE_NAME
-      @stone = Stone.create(TEST_STONE_NAME)
-    else
-      @stone = Stone.existing(TEST_STONE_NAME)
-    end
+    clear_stone(TEST_STONE_NAME)
+    @stone = Stone.create(TEST_STONE_NAME)
     @stone.start
     @topaz = Topaz.new(@stone)
   end

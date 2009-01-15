@@ -8,6 +8,8 @@ verbose(false)
 
 require 'date'
 
+TEST_STONE_NAME = 'testcase'
+
 class BaseTestCase < Test::Unit::TestCase
   def clear_stone(stone_name)
     if GemStoneInstallation.current.stones.include? stone_name

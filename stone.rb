@@ -51,6 +51,7 @@ end
 
 class Stone
   attr_reader :name, :user_name, :password
+  attr_reader :gemstone_environment
 
   def Stone.existing(name)
     fail "Stone does not exist" if not GemStoneInstallation.current.stones.include? name
@@ -72,6 +73,7 @@ class Stone
   def initialize_gemstone_environment(gemstone_environment)
     @gemstone_environment = gemstone_environment ||= GemStoneInstallation.current
 
+    ENV['GEMSTONE'] = @gemstone_environment.installation_path
     ENV['GEMSTONE_NAME'] = @name
     ENV['GEMSTONE_LOGDIR'] = log_directory
     ENV['GEMSTONE_DATADIR'] = data_directory
@@ -138,6 +140,8 @@ class Stone
   def restore
     log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename}'"
     run_topaz_command("SystemRepository restoreFromBackup: '#{extend_backup_filename}'")
+    run_topaz_command("SystemRepository restoreFromCurrentLogs")
+    run_topaz_command("SystemRepository commitRestore")
   end
 
   def system_config_filename
