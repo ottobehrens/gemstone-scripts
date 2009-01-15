@@ -18,8 +18,8 @@ class StoneUnitTestCase < StoneTestCase
 
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository startNewLog/).and_return(["[4202 sz:0 cls: 74241 SmallInteger] #{log_number}"]).once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/System startCheckpointSync/).once.ordered
-    expected_backup_path = "#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full.gz"
-    partial_mock_stone.should_receive(:topaz_commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_path}'/).once.ordered
+    expected_backup_directory = "#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full.gz"
+    partial_mock_stone.should_receive(:topaz_commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_directory}'/).once.ordered
     partial_mock_stone.should_receive(:log_sh).with("tar zcf #{stone.backup_filename} #{stone.extent_backup_filename} #{stone.data_directory}/tranlog/tranlog#{log_number}.dbf").once.ordered
     
     stone.backup

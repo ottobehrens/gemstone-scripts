@@ -13,7 +13,7 @@ class GlassStoneUnitTestCase < GlassStoneTestCase
     partial_mock_stone = flexmock(stone)
 
     partial_mock_stone.should_receive(:topaz_commands).with(/UserGlobals at: #BootStrapSymbolDictionaryName put: #UserGlobals. System commitTransaction/).once.ordered
-    partial_mock_stone.should_receive(:topaz_commands).with(["input #{GemStoneInstallation.current.installation_path}/seaside/topaz/installMonticello.topaz", "commit"]).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(["input #{GemStoneInstallation.current.installation_directory}/seaside/topaz/installMonticello.topaz", "commit"]).once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/UserGlobals removeKey: #BootStrapSymbolDictionaryName. System commitTransaction/).once.ordered
 
     stone.initialize_new_stone
