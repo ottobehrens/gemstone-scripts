@@ -1,13 +1,23 @@
 require 'topaz'
 
 class GemStoneInstallation
+  attr_reader :installation_path, :config_directory, :installation_extent_directory, :base_log_directory, :backup_directory
 
   def self.current
     self.new("/opt/gemstone/product")
   end
 
-  def initialize(installation_path)
+  def initialize(installation_path, 
+                 config_directory="/etc/gemstone",
+                 installation_extent_directory="/var/local/gemstone",
+                 base_log_directory="/var/log/gemstone",
+                 backup_directory="/var/backups/gemstone")
+
     @installation_path = installation_path
+    @config_directory = config_directory
+    @base_log_directory = base_log_directory
+    @installation_extent_directory = installation_extent_directory
+    @backup_directory = backup_directory
 
     ENV['GEMSTONE'] = @installation_path
     ENV['PATH'] += ":#{ENV['GEMSTONE']}/bin"
@@ -23,7 +33,6 @@ class GemStoneInstallation
     sh "gslist -clv"
   end
 
-
   def stopnetldi
     sh "stopnetldi"
   end
@@ -35,23 +44,13 @@ class GemStoneInstallation
   def initial_extent
     File.join(@installation_path, "bin", "extent0.dbf")
   end
-
-  def installation_extent_directory
-    "/var/local/gemstone"
-  end
-
-  def installation_path
-    @installation_path
-  end
-
-  def config_directory
-    "/etc/gemstone"
-  end
 end
 
 class Stone
   attr_reader :name, :user_name, :password
-  attr_reader :gemstone_environment
+  attr_reader :log_directory
+  attr_reader :data_directory
+  attr_reader :backup_directory
 
   def Stone.existing(name)
     fail "Stone does not exist" if not GemStoneInstallation.current.stones.include? name
@@ -65,21 +64,25 @@ class Stone
     instance
   end
 
-  def initialize(name, gemstone_environment)
+  def initialize(name, gemstone_installation, username="DataCurator", password="swordfish")
     @name = name
-    initialize_gemstone_environment(gemstone_environment)
+    @user_name = username
+    @password = password
+    @log_directory = "#{gemstone_installation.base_log_directory}/#@name"
+    @data_directory = "#{gemstone_installation.installation_extent_directory}/#@name"
+    @backup_directory = gemstone_installation.backup_directory
+    initialize_gemstone_environment
   end
 
-  def initialize_gemstone_environment(gemstone_environment)
-    @gemstone_environment = gemstone_environment ||= GemStoneInstallation.current
-
-    ENV['GEMSTONE'] = @gemstone_environment.installation_path
-    ENV['GEMSTONE_NAME'] = @name
+  def initialize_gemstone_environment
+    @gemstone_installation = gemstone_installation ||= GemStoneInstallation.current
+    ENV['GEMSTONE'] = @gemstone_installation.installation_path
+    ENV['GEMSTONE_NAME'] = name
     ENV['GEMSTONE_LOGDIR'] = log_directory
     ENV['GEMSTONE_DATADIR'] = data_directory
   end
 
-  # Bare bones stone with nothing loaded
+  # Bare bones stone with nothing loaded, specialise for your situation
   def initialize_new_stone
     create_config_file
     mkdir_p extent_directory
@@ -132,36 +135,32 @@ class Stone
     tranlog_number = (/(\d*)$/.match(result.last))[1]
 
     run_topaz_command("System startCheckpointSync")
-    run_topaz_command("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{extend_backup_filename}'")
+    run_topaz_command("System abortTransaction. SystemRepository fullBackupCompressedTo: '#{extent_backup_filename}'")
 
-    log_sh "tar zcf #{backup_filename} #{extend_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
+    log_sh "tar zcf #{backup_filename} #{extent_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
   end
 
   def restore
     log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename}'"
-    run_topaz_command("SystemRepository restoreFromBackup: '#{extend_backup_filename}'")
+    run_topaz_command("SystemRepository restoreFromBackup: '#{extent_backup_filename}'")
     run_topaz_command("SystemRepository restoreFromCurrentLogs")
     run_topaz_command("SystemRepository commitRestore")
   end
 
   def system_config_filename
-    "#{@gemstone_environment.config_directory}/#@name.conf"
+    "#{@gemstone_installation.config_directory}/#@name.conf"
   end
 
   def create_config_file
     require 'erb'
     File.open(system_config_filename, "w") do | file |
-      file.write(ERB.new(File.open("stone.conf.template").readlines.join).result(binding))
+      file.write(ERB.new(config_file_template).result(binding))
     end
     self
   end
 
-  def user_name
-    "DataCurator"
-  end
-
-  def password
-    "swordfish"
+  def config_file_template
+    File.open("stone.conf.template").read
   end
 
   def extent_directory
@@ -181,33 +180,24 @@ class Stone
     [directory, directory]
   end
 
-  def log_directory
-    directory = "/var/log/gemstone/#{@name}"
-    mkdir_p directory
-    directory
-  end
-
   def topaz_logfile
     "#{log_directory}/topaz.log"
   end
 
   def command_logfile
+    mkdir_p log_directory
     "#{log_directory}/stone_command_output.log"
   end
 
-  def data_directory
-    "/var/local/gemstone/#@name"
-  end
-
-  def backup_directory
-    "/var/backups/gemstone"
+  def gemstone_installation_path
+    @gemstone_installation.installation_path
   end
 
   def backup_filename
     "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.bak.tgz"
   end
 
-  def extend_backup_filename
+  def extent_backup_filename
     "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.full.gz"
   end
 
@@ -225,7 +215,7 @@ class Stone
   end
 
   def initialize_extents
-    install(@gemstone_environment.initial_extent, extent_filename, :mode => 0660)
+    install(@gemstone_installation.initial_extent, extent_filename, :mode => 0660)
   end
 
   def topaz_commands(commands)
