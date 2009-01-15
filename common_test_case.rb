@@ -3,7 +3,7 @@ require 'flexmock/test_unit'
 
 class BaseTestCase < Test::Unit::TestCase
   def clear_stone(stone_name)
-    if GemStone.current.stones.include? stone_name
+    if GemStoneInstallation.current.stones.include? stone_name
       stone = Stone.existing(stone_name)
       stone.stop
       rm stone.system_config_filename

@@ -1,6 +1,6 @@
 require 'topaz'
 
-class GemStone
+class GemStoneInstallation
 
   def self.current
     self.new("/opt/gemstone/product")
@@ -53,13 +53,13 @@ class Stone
   attr_reader :name, :user_name, :password
 
   def Stone.existing(name)
-    fail "Stone does not exist" if not GemStone.current.stones.include? name
-    new(name, GemStone.current)
+    fail "Stone does not exist" if not GemStoneInstallation.current.stones.include? name
+    new(name, GemStoneInstallation.current)
   end
 
   def Stone.create(name)
-    fail "Cannot create stone #{name}: the conf file already exists in /etc/gemstone" if GemStone.current.stones.include? name
-    instance = new(name, GemStone.current)
+    fail "Cannot create stone #{name}: the conf file already exists in /etc/gemstone" if GemStoneInstallation.current.stones.include? name
+    instance = new(name, GemStoneInstallation.current)
     instance.initialize_new_stone
     instance
   end
@@ -72,7 +72,7 @@ class Stone
   end
 
   def initialize_gemstone_environment(gemstone_environment)
-    @gemstone_environment = gemstone_environment ||= GemStone.current
+    @gemstone_environment = gemstone_environment ||= GemStoneInstallation.current
 
     ENV['GEMSTONE_NAME'] = @name
     ENV['GEMSTONE_LOGDIR'] = log_directory

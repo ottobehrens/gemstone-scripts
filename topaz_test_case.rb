@@ -11,7 +11,7 @@ TEST_STONE_NAME = 'testcase'
 
 class TopazTestCase < Test::Unit::TestCase
   def setup
-    if not GemStone.current.stones.include? TEST_STONE_NAME
+    if not GemStoneInstallation.current.stones.include? TEST_STONE_NAME
       @stone = Stone.create(TEST_STONE_NAME)
     else
       @stone = Stone.existing(TEST_STONE_NAME)

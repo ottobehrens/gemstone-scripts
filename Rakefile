@@ -15,17 +15,17 @@ end
 
 desc "Server status"
 task :status do
-  GemStone.current.status
+  GemStoneInstallation.current.status
 end
 
 desc "Start netldi"
 task :stopnetldi do
-  GemStone.current.stopnetldi
+  GemStoneInstallation.current.stopnetldi
 end
 
 desc "Start netldi"
 task :startnetldi do
-  GemStone.current.startnetldi
+  GemStoneInstallation.current.startnetldi
 end
 
 def task_gemstone(stone, action)
@@ -35,9 +35,9 @@ def task_gemstone(stone, action)
     end
 end
 
-GemStone.current.stones.each do |stoneName|
+GemStoneInstallation.current.stones.each do |stoneName|
   namespace stoneName do
-    stone = Stone.new(stoneName, GemStone.current)
+    stone = Stone.new(stoneName, GemStoneInstallation.current)
 
     [:stop, :start, :restart, :status].each do |action|
       task_gemstone(stone, action)

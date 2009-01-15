@@ -75,16 +75,16 @@ class StoneIntegrationTestCase < StoneTestCase
   def test_netldi
     `stopnetldi`
     assert `gslist` !~ /^exists.*Netldi/
-    GemStone.current.startnetldi
+    GemStoneInstallation.current.startnetldi
     assert `gslist` =~ /^exists.*Netldi/
-    GemStone.current.stopnetldi
+    GemStoneInstallation.current.stopnetldi
     assert `gslist` !~ /^exists.*Netldi/
   end
 
   def test_create_new
-    assert !GemStone.current.stones.include?(TEST_STONE_NAME)
+    assert !GemStoneInstallation.current.stones.include?(TEST_STONE_NAME)
     stone = Stone.create(TEST_STONE_NAME)
-    assert GemStone.current.stones.include?(TEST_STONE_NAME)
+    assert GemStoneInstallation.current.stones.include?(TEST_STONE_NAME)
     stone.start
     assert stone.running?
     assert File.directory?(stone.log_directory)
@@ -135,13 +135,13 @@ class StoneIntegrationTestCase < StoneTestCase
   end
 
   def test_create_config_file
-    config_filename = "#{GemStone.current.config_directory}/#{TEST_STONE_NAME}.conf"
+    config_filename = "#{GemStoneInstallation.current.config_directory}/#{TEST_STONE_NAME}.conf"
     assert ! (File.exist? config_filename)
 
-    stone = Stone.new(TEST_STONE_NAME, GemStone.current).create_config_file
+    stone = Stone.new(TEST_STONE_NAME, GemStoneInstallation.current).create_config_file
 
     assert File.exists? config_filename
-    assert GemStone.current.stones.include?(TEST_STONE_NAME)
+    assert GemStoneInstallation.current.stones.include?(TEST_STONE_NAME)
 
     content = File.open(config_filename).readlines.join 
     assert content.include? "DBF_EXTENT_NAMES = #{stone.extent_filename}"
