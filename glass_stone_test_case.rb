@@ -22,6 +22,8 @@ end
 
 class GlassStoneIntegrationCase < GlassStoneTestCase
   def test_bootstrap
-    GlassStone.create(TEST_STONE_NAME)
+    stone = GlassStone.create(TEST_STONE_NAME)
+    # Will raise an exception if Monticello is not installed
+    stone.run_topaz_command("MCPlatformSupport")
   end
 end

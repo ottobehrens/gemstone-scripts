@@ -1,4 +1,4 @@
-require 'stone'
+require 'glass_stone'
 
 # Set to true to see what commands gets executed
 verbose(false)
@@ -10,7 +10,7 @@ end
 desc "Create a new stone"
 task :new_stone, :stone_name do |t, args|
   puts "Creating #{args.stone_name}"
-  Stone.create(args.stone_name)
+  GlassStone.create(args.stone_name)
 end
 
 desc "Server status"
@@ -37,7 +37,7 @@ end
 
 GemStoneInstallation.current.stones.each do |stoneName|
   namespace stoneName do
-    stone = Stone.new(stoneName, GemStoneInstallation.current)
+    stone = GlassStone.new(stoneName, GemStoneInstallation.current)
 
     [:stop, :start, :restart, :status, :backup].each do |action|
       task_gemstone(stone, action)
