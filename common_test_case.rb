@@ -1,5 +1,12 @@
+require 'rubygems'
 require 'test/unit'
 require 'flexmock/test_unit'
+
+# To get to FileUtils.sh
+require 'rake'
+verbose(false)
+
+require 'date'
 
 class BaseTestCase < Test::Unit::TestCase
   def clear_stone(stone_name)
@@ -12,13 +19,5 @@ class BaseTestCase < Test::Unit::TestCase
   end
 
   def test_abstract
-  end
-end
-
-class Stone
-  include FlexMock::TestCase
-  
-  def override_topaz_runner(topaz_runner)
-    @topaz_runner = topaz_runner
   end
 end

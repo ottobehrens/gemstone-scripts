@@ -66,8 +66,6 @@ class Stone
 
   def initialize(name, gemstone_environment)
     @name = name
-    @topaz_runner = Topaz.new(self)
-
     initialize_gemstone_environment(gemstone_environment)
   end
 
@@ -97,8 +95,8 @@ class Stone
     rm_rf tranlog_directories
   end
 
-  def running?(waitTime = -1)
-    sh "waitstone #@name #{waitTime} 1>/dev/null" do | ok, status |
+  def running?(wait_time = -1)
+    sh "waitstone #@name #{wait_time} 1>/dev/null" do | ok, status |
       return ok
     end
   end
@@ -180,7 +178,9 @@ class Stone
   end
 
   def log_directory
-    "/var/log/gemstone/#{@name}"
+    directory = "/var/log/gemstone/#{@name}"
+    mkdir_p directory
+    directory
   end
 
   def topaz_logfile
@@ -215,7 +215,6 @@ class Stone
     topaz_commands(["run", commands, "%"].join("\n"))
   end
 
-
   def log_sh(command_line)
     sh "echo '#{command_line}' > #{command_logfile}"
     sh "#{command_line} 2>&1 >> #{command_logfile}"
@@ -238,6 +237,6 @@ class Stone
               "output pop",
               "exit"
              ].flatten
-    @topaz_runner.commands(script)
+    Topaz.new(self).commands(script)
   end
 end

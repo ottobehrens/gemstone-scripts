@@ -26,7 +26,7 @@ class Topaz
   end
 
   def commands(topaz_commands)
-    fail "We expect the stone #{stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !@stone.running?
+    fail "We expect the stone #{@stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !@stone.running?
     IO.popen(@topaz_command, "w+") do |io|
       consume_until_prompt(io)
       topaz_commands.each do | command |

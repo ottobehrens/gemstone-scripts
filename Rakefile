@@ -39,7 +39,7 @@ GemStoneInstallation.current.stones.each do |stoneName|
   namespace stoneName do
     stone = Stone.new(stoneName, GemStoneInstallation.current)
 
-    [:stop, :start, :restart, :status].each do |action|
+    [:stop, :start, :restart, :status, :backup].each do |action|
       task_gemstone(stone, action)
     end
   end

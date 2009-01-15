@@ -1,16 +1,7 @@
 #!/usr/bin/ruby
 
 require 'stone'
-
-require 'rubygems'
 require 'common_test_case'
-require 'date'
-
-require 'test/unit'
-
-# To get to FileUtils.sh
-require 'rake'
-verbose(false)
 
 class StoneTestCase < BaseTestCase
   TEST_STONE_NAME = 'testcase'
@@ -24,31 +15,27 @@ end
 class StoneUnitTestCase < StoneTestCase
   def test_backup
     stone = Stone.create(TEST_STONE_NAME)
-    mock_topaz_runner = flexmock('topaz')
     partial_mock_stone = flexmock(stone)
 
     log_number = "1313"
 
-    mock_topaz_runner.should_receive(:commands).with(/SystemRepository startNewLog/).and_return(["[4202 sz:0 cls: 74241 SmallInteger] #{log_number}"]).once.ordered
-    mock_topaz_runner.should_receive(:commands).with(/System startCheckpointSync/).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository startNewLog/).and_return(["[4202 sz:0 cls: 74241 SmallInteger] #{log_number}"]).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/System startCheckpointSync/).once.ordered
     expected_backup_path = "#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full.gz"
-    mock_topaz_runner.should_receive(:commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_path}'/).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_path}'/).once.ordered
     partial_mock_stone.should_receive(:log_sh).with("tar zcf #{stone.backup_filename} #{stone.extend_backup_filename} #{stone.data_directory}/tranlog/tranlog#{log_number}.dbf").once.ordered
     
-    stone.override_topaz_runner(mock_topaz_runner)
     stone.backup
   end
 
-  def test_restore
+  def notest_restore
     stone = Stone.create(TEST_STONE_NAME)
-    mock_topaz_runner = flexmock('topaz')
     partial_mock_stone = flexmock(stone)
     
     partial_mock_stone.should_receive(:log_sh).with("tar -C '#{stone.backup_directory}' -zxf '#{stone.backup_filename}'").once.ordered
-    mock_topaz_runner.should_receive(:commands).with(/SystemRepository restoreFromBackup: '#{stone.extend_backup_filename}'/).once.ordered
-    # restore from logs as well TODO
-    stone.override_topaz_runner(mock_topaz_runner)
+    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository restoreFromBackup: '#{stone.extend_backup_filename}'/).once.ordered
     stone.restore
+    #fail "Restore from logs as well"
   end
 end
 
