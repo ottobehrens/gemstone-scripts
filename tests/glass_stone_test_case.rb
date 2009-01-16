@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 require File.join(File.dirname(__FILE__), "..", 'glass_stone')
 require File.join(File.dirname(__FILE__), 'common_test_case')
 
