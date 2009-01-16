@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 
-require 'topaz'
-require 'stone'
+require File.join(File.dirname(__FILE__), "..", 'stone')
+require File.join(File.dirname(__FILE__), "..", 'topaz')
 
-require 'common_test_case'
+require File.join(File.dirname(__FILE__), 'common_test_case')
 
 class TopazTestCase < BaseTestCase
   def setup

@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
-require 'stone'
-require 'common_test_case'
+require File.join(File.dirname(__FILE__), "..", 'stone')
+require File.join(File.dirname(__FILE__), 'common_test_case')
 
 class StoneTestCase < BaseTestCase
   def setup

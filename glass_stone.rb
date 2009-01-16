@@ -1,4 +1,4 @@
-require 'stone'
+require File.join(File.dirname(__FILE__), 'stone')
 
 class GlassStone < Stone
   def initialize_new_stone

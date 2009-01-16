@@ -1,5 +1,5 @@
-require 'common_test_case'
-require 'glass_stone'
+require File.join(File.dirname(__FILE__), "..", 'glass_stone')
+require File.join(File.dirname(__FILE__), 'common_test_case')
 
 class GlassStoneTestCase < BaseTestCase
   def setup

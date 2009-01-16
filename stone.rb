@@ -1,4 +1,4 @@
-require 'topaz'
+require File.join(File.dirname(__FILE__), 'topaz')
 
 class GemStoneInstallation
   attr_reader :installation_directory, :config_directory, :installation_extent_directory, :base_log_directory, :backup_directory
@@ -161,7 +161,7 @@ class Stone
   end
 
   def config_file_template
-    File.open("stone.conf.template").read
+    File.open(File.dirname(__FILE__) + "/stone.conf.template").read
   end
 
   def extent_directory
