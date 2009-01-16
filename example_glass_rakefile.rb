@@ -1,10 +1,19 @@
+# Execute with:
+# rake -f example_glass_rakefile.rb -T
+
 require 'glass_stone'
 
+# This is an example Rakefile for a GLASS installation.
+# For your own installation, extend Stone/GlassStone and override to
+# change the behaviour for your situation.
+#
+# Your initialize_new_stone will most probably differ, for example.
+# 
 # Set to true to see what commands gets executed
 verbose(false)
 
 task :default do
-  puts "Tasks for managing GemStone"
+  puts "Example tasks for managing a GemStone installation"
 end
 
 desc "Create a new stone"
