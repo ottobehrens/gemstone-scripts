@@ -137,14 +137,14 @@ class Stone
     fail if tranlog_number < 0
 
     run_topaz_command("System startCheckpointSync")
-    run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{extent_backup_filename}'")
+    run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{extent_backup_filename_for_today}'")
 
-    log_sh "tar zcf #{backup_filename} #{extent_backup_filename} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
+    log_sh "tar zcf #{backup_filename_for_today} #{extent_backup_filename_for_today} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
   end
 
-  def restore
-    log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename}'"
-    run_topaz_command("SystemRepository restoreFromBackup: '#{extent_backup_filename}'")
+  def restore_latest_backup
+    log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename_for_today}'"
+    run_topaz_command("SystemRepository restoreFromBackup: '#{extent_backup_filename_for_today}'")
     run_topaz_command("SystemRepository restoreFromCurrentLogs")
     run_topaz_command("SystemRepository commitRestore")
   end
@@ -195,11 +195,11 @@ class Stone
     @gemstone_installation.installation_directory
   end
 
-  def backup_filename
+  def backup_filename_for_today
     "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.bak.tgz"
   end
 
-  def extent_backup_filename
+  def extent_backup_filename_for_today
     "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.full.gz"
   end
 
