@@ -10,7 +10,7 @@ class StoneTestCase < BaseTestCase
 end
 
 class StoneUnitTestCase < StoneTestCase
-  def test_backup
+  def test_full_backup
     stone = Stone.create(TEST_STONE_NAME)
     partial_mock_stone = flexmock(stone)
 
@@ -22,7 +22,7 @@ class StoneUnitTestCase < StoneTestCase
     partial_mock_stone.should_receive(:topaz_commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_directory}'/).once.ordered
     partial_mock_stone.should_receive(:log_sh).with("tar zcf #{stone.backup_filename_for_today} #{stone.extent_backup_filename_for_today} #{stone.data_directory}/tranlog/tranlog#{log_number}.dbf").once.ordered
     
-    stone.backup
+    stone.full_backup
   end
 
   def test_restore
@@ -34,17 +34,17 @@ class StoneUnitTestCase < StoneTestCase
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository restoreFromCurrentLogs/).and_return('Restore from transaction log(s) succeeded').once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository commitRestore/).and_return('commitRestore succeeded').once.ordered
 
-    stone.restore_latest_backup
+    stone.restore_latest_full_backup
   end
 end
 
 class StoneIntegrationTestCase < StoneTestCase
 
-  def test_backup
+  def test_full_backup
     stone = Stone.create(TEST_STONE_NAME)
     remove_previous_backup_files(stone)
     stone.start
-    stone.backup
+    stone.full_backup
     assert File.exist? stone.backup_filename_for_today
   end
 
@@ -53,8 +53,8 @@ class StoneIntegrationTestCase < StoneTestCase
     stone.start
     add_restore_worked_method(stone)
     remove_previous_backup_files(stone)
-    stone.backup
-    stone.restore_latest_backup
+    stone.full_backup
+    stone.restore_latest_full_backup
     stone.run_topaz_command('String restoreWorked')
   end
 

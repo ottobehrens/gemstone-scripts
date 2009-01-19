@@ -131,7 +131,7 @@ class Stone
     start
   end
 
-  def backup
+  def full_backup
     result = run_topaz_command("SystemRepository startNewLog")
     tranlog_number = ((/(\d*)$/.match(result.last))[1]).to_i
     fail if tranlog_number < 0
@@ -142,7 +142,7 @@ class Stone
     log_sh "tar zcf #{backup_filename_for_today} #{extent_backup_filename_for_today} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
   end
 
-  def restore_latest_backup
+  def restore_latest_full_backup
     log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename_for_today}'"
     run_topaz_command("SystemRepository restoreFromBackup: '#{extent_backup_filename_for_today}'")
     run_topaz_command("SystemRepository restoreFromCurrentLogs")
