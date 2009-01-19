@@ -11,6 +11,10 @@ require 'date'
 TEST_STONE_NAME = 'testcase'
 
 class BaseTestCase < Test::Unit::TestCase
+  def setup
+    clear_stone(TEST_STONE_NAME)
+  end
+
   def clear_stone(stone_name)
     if GemStoneInstallation.current.stones.include? stone_name
       stone = Stone.existing(stone_name)
@@ -21,5 +25,6 @@ class BaseTestCase < Test::Unit::TestCase
   end
 
   def test_abstract
+    # This is an abstract test case
   end
 end

@@ -53,7 +53,6 @@ class Topaz
   
   def dump_as_script(*topaz_commands)
     topaz_commands.each do | command |
-      puts "Feed"
       command.execute_on_topaz_stream(STDOUT)
     end
     self

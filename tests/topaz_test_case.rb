@@ -7,7 +7,7 @@ require File.join(File.dirname(__FILE__), 'common_test_case')
 
 class TopazTestCase < BaseTestCase
   def setup
-    clear_stone(TEST_STONE_NAME)
+    super
     @stone = Stone.create(TEST_STONE_NAME)
     @stone.start
     @topaz = Topaz.new(@stone)

@@ -4,7 +4,7 @@ require File.join(File.dirname(__FILE__), 'topaz')
 require 'date'
 
 class Stone
-  attr_reader :name, :user_name, :password
+  attr_reader :name, :username, :password
   attr_reader :log_directory
   attr_reader :data_directory
   attr_reader :backup_directory
@@ -15,7 +15,7 @@ class Stone
   end
 
   def Stone.create(name)
-    fail "Cannot create stone #{name}: the conf file already exists in /etc/gemstone" if GemStoneInstallation.current.stones.include? name
+    fail "Cannot create stone #{name}: the conf file already exists in #{GemStoneInstallation.current.config_directory}" if GemStoneInstallation.current.stones.include? name
     instance = new(name, GemStoneInstallation.current)
     instance.initialize_new_stone
     instance
@@ -23,16 +23,16 @@ class Stone
 
   def initialize(name, gemstone_installation, username="DataCurator", password="swordfish")
     @name = name
-    @user_name = username
+    @username = username
     @password = password
     @log_directory = "#{gemstone_installation.base_log_directory}/#@name"
     @data_directory = "#{gemstone_installation.installation_extent_directory}/#@name"
     @backup_directory = gemstone_installation.backup_directory
+    @gemstone_installation = gemstone_installation ||= GemStoneInstallation.current
     initialize_gemstone_environment
   end
 
   def initialize_gemstone_environment
-    @gemstone_installation = gemstone_installation ||= GemStoneInstallation.current
     ENV['GEMSTONE'] = @gemstone_installation.installation_directory
     ENV['GEMSTONE_NAME'] = name
     ENV['GEMSTONE_LOGDIR'] = log_directory
@@ -78,7 +78,7 @@ class Stone
   end
 
   def stop
-    log_sh "stopstone -i #@name DataCurator swordfish"
+    log_sh "stopstone -i #{name} #{username} #{password}"
     self
   end
 
@@ -178,7 +178,7 @@ class Stone
 
   def topaz_commands(commands)
     Topaz.new(self).commands("output append #{topaz_logfile}",
-                             "set u #{user_name} p #{password} gemstone #{name}",
+                             "set u #{username} p #{password} gemstone #{name}",
                              "login",
                              "limit oops 100",
                              "limit bytes 1000",

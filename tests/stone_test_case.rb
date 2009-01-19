@@ -4,9 +4,6 @@ require File.join(File.dirname(__FILE__), "..", 'stone')
 require File.join(File.dirname(__FILE__), 'common_test_case')
 
 class StoneTestCase < BaseTestCase
-  def setup
-    clear_stone(TEST_STONE_NAME)
-  end
 end
 
 class StoneUnitTestCase < StoneTestCase
@@ -51,11 +48,11 @@ class StoneIntegrationTestCase < StoneTestCase
   def test_restore
     stone = Stone.create(TEST_STONE_NAME)
     stone.start
-    add_restore_worked_method(stone)
+    random_method_name = add_restore_worked_method(stone)
     remove_previous_backup_files(stone)
     stone.full_backup
     stone.restore_latest_full_backup
-    stone.run_topaz_command('String restoreWorked')
+    assert_nothing_raised { stone.run_topaz_command("String #{random_method_name}") }
   end
 
   def test_netldi
@@ -143,17 +140,17 @@ class StoneIntegrationTestCase < StoneTestCase
   end
 
   def add_restore_worked_method(stone)
-    # Temp, until a stone is probable new'ed
+    # Not assuming a GLASS installation
     stone.run_topaz_command('GsPackageLibrary installPackage: (GsPackageLibrary createPackageNamed: #SessionMethods). System commitTransaction.')
 
-    stone.topaz_commands([
-                          'set class String', 
+    random_method_name = "restoreWorked#{rand 1000}"
+    stone.topaz_commands(['set class String', 
                           'set category for-integration-testing',
                           ['classmethod:',
-                           'restoreWorked',
+                           random_method_name,
                            " ^ 'yay restore worked'",
                            '%'].join("\n"),
-                          'commit'
-                         ])
+                          'commit'])
+    return random_method_name
   end
 end
