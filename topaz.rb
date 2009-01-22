@@ -42,7 +42,9 @@ class Topaz
       consume_until_prompt(io)
       topaz_commands.each do | command |
         command.execute_on_topaz_stream(io)
-        consume_until_prompt(io)
+	if command != "exit" then
+          consume_until_prompt(io)
+        end
       end
     end
     if $?.exitstatus > 0
