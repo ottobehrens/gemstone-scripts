@@ -15,15 +15,15 @@ class TopazTestCase < BaseTestCase
 
   def test_simple_commands
     @topaz.commands(["status", "exit"])
-    fail "Output is #{@topaz.output[1]}" if /^Current settings are\:/ !~ @topaz.output[1]
+    fail "Output is #{@topaz.output[1]}" if /^Current settings are\:/ !~ @topaz.output.last
 
     @topaz.commands("status", "exit")
-    fail "Output is #{@topaz.output[1]}" if /^Current settings are\:/ !~ @topaz.output[1]
+    fail "Output is #{@topaz.output[1]}" if /^Current settings are\:/ !~ @topaz.output.last
   end
 
   def test_login
     @topaz.commands("set gems #{@stone.name} u DataCurator p swordfish", "login", "exit")
-    fail "Output is #{@topaz.output[2]}" if /^successful login/ !~ @topaz.output[2]
+    fail "Output is #{@topaz.output[2]}" if /^successful login/ !~ @topaz.output.last
   end
   
   def test_nested_commands

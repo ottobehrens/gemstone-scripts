@@ -4,7 +4,9 @@ require File.join(File.dirname(__FILE__), 'topaz')
 require 'date'
 
 class Stone
-  attr_reader :name, :username, :password
+  attr_accessor :username, :password
+
+  attr_reader :name
   attr_reader :log_directory
   attr_reader :data_directory
   attr_reader :backup_directory
