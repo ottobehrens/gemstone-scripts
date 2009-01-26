@@ -101,8 +101,12 @@ class Stone
   end
 
   def restore_latest_full_backup
-    log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename_for_today}'"
-    run_topaz_command("SystemRepository restoreFromBackup: '#{extent_backup_filename_for_today}'")
+    restore_full_backup(name, Date.today)
+  end
+
+  def restore_full_backup(stone_name, for_date=Date.today)
+    log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename(stone_name, for_date)}'"
+    run_topaz_command("SystemRepository restoreFromBackup: '#{extent_backup_filename(stone_name, for_date)}'")
     run_topaz_command("SystemRepository restoreFromCurrentLogs")
     run_topaz_command("SystemRepository commitRestore")
   end
@@ -154,11 +158,23 @@ class Stone
   end
 
   def backup_filename_for_today
-    "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.bak.tgz"
+    backup_filename(name, Date.today)
   end
 
   def extent_backup_filename_for_today
-    "#{backup_directory}/#{name}_#{Date.today.strftime('%F')}.full.gz"
+    extent_backup_filename(name, Date.today)
+  end
+
+  def extent_backup_filename(for_stone_name, for_date)
+    "#{backup_filename_prefix(for_stone_name, for_date)}.full.gz"
+  end
+
+  def backup_filename(for_stone_name, for_date)
+    "#{backup_filename_prefix(for_stone_name, for_date)}.bak.tgz"
+  end
+
+  def backup_filename_prefix(for_stone_name, for_date)
+    "#{backup_directory}/#{for_stone_name}_#{for_date.strftime('%F')}"
   end
 
   def run_topaz_command(command)

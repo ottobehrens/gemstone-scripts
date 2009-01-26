@@ -22,7 +22,7 @@ class StoneUnitTestCase < StoneTestCase
     stone.full_backup
   end
 
-  def test_restore
+  def test_restore_latest_backup
     stone = Stone.create(TEST_STONE_NAME)
     partial_mock_stone = flexmock(stone)
     
@@ -32,6 +32,18 @@ class StoneUnitTestCase < StoneTestCase
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository commitRestore/).and_return('commitRestore succeeded').once.ordered
 
     stone.restore_latest_full_backup
+  end
+
+  def test_restore_backup_of_another_stone_on_date
+    stone = Stone.create(TEST_STONE_NAME)
+    partial_mock_stone = flexmock(stone)
+    
+    partial_mock_stone.should_receive(:log_sh).with("tar -C '#{stone.backup_directory}' -zxf '/var/backups/gemstone/anotherstone_2005-05-13.bak.tgz'").once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(%r{SystemRepository restoreFromBackup: '/var/backups/gemstone/anotherstone_2005-05-13.full.gz'}).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository restoreFromCurrentLogs/).and_return('Restore from transaction log(s) succeeded').once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository commitRestore/).and_return('commitRestore succeeded').once.ordered
+
+    stone.restore_full_backup('anotherstone', Date.civil(2005, 5, 13))
   end
 end
 
