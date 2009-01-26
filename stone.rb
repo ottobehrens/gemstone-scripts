@@ -97,7 +97,8 @@ class Stone
     run_topaz_command("System startCheckpointSync")
     run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{extent_backup_filename_for_today}'")
 
-    log_sh "tar zcf #{backup_filename_for_today} #{extent_backup_filename_for_today} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
+    # Transform is to remove the leading directory name
+    log_sh "tar --transform='s,.*/,,' -zcf #{backup_filename_for_today} #{extent_backup_filename_for_today} #{data_directory}/tranlog/tranlog#{tranlog_number}.dbf"
   end
 
   def restore_latest_full_backup
