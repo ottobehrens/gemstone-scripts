@@ -107,7 +107,7 @@ class Stone
 
   def restore_full_backup(stone_name, for_date=Date.today)
     log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename(stone_name, for_date)}'"
-    run_topaz_command("SystemRepository restoreFromBackup: '#{extent_backup_filename(stone_name, for_date)}'")
+    run_topaz_command("System commitTransaction. SystemRepository restoreFromBackup: '#{extent_backup_filename(stone_name, for_date)}'")
     run_topaz_command("SystemRepository restoreFromCurrentLogs")
     run_topaz_command("SystemRepository commitRestore")
   end
