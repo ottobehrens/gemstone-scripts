@@ -27,6 +27,7 @@ class StoneUnitTestCase < StoneTestCase
     partial_mock_stone = flexmock(stone)
     
     partial_mock_stone.should_receive(:log_sh).with("tar -C '#{stone.backup_directory}' -zxf '#{stone.backup_filename_for_today}'").once.ordered
+    partial_mock_stone.should_receive(:log_sh).with("cp #{stone.backup_directory}/tranlog*.dbf #{stone.data_directory}/tranlog").once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/System commitTransaction. SystemRepository restoreFromBackup: '#{stone.extent_backup_filename_for_today}'/).once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository restoreFromCurrentLogs/).and_return('Restore from transaction log(s) succeeded').once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository commitRestore/).and_return('commitRestore succeeded').once.ordered

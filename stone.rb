@@ -43,11 +43,15 @@ class Stone
 
   # Bare bones stone with nothing loaded, specialise for your situation
   def initialize_new_stone
+    create_skeleton
+    initialize_extents
+  end
+
+  def create_skeleton
     create_config_file
     mkdir_p extent_directory
     mkdir_p log_directory
     mkdir_p tranlog_directories
-    initialize_extents
   end
 
   # Will remove everything in the stone's data directory!
@@ -106,7 +110,12 @@ class Stone
   end
 
   def restore_full_backup(stone_name, for_date=Date.today)
+    stop
+    destroy!
+    initialize_new_stone
+
     log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename(stone_name, for_date)}'"
+    log_sh "cp #{backup_directory}/tranlog*.dbf #{data_directory}/tranlog/"
     run_topaz_command("System commitTransaction. SystemRepository restoreFromBackup: '#{extent_backup_filename(stone_name, for_date)}'")
     run_topaz_command("SystemRepository restoreFromCurrentLogs")
     run_topaz_command("SystemRepository commitRestore")
