@@ -23,7 +23,7 @@ class GemStoneInstallation
 
   def stones
     Dir.glob("#{config_directory}/*").collect do | full_filename |
-      File.basename(full_filename).split(".").first 
+      File.basename(full_filename).split(".conf").first 
     end
   end
 
