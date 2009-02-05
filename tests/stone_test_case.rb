@@ -24,27 +24,27 @@ class StoneUnitTestCase < StoneTestCase
 
   def test_restore_latest_backup
     stone = Stone.create(TEST_STONE_NAME)
-    partial_mock_stone = flexmock(stone)
-    
-    partial_mock_stone.should_receive(:log_sh).with("tar -C '#{stone.backup_directory}' -zxf '#{stone.backup_filename_for_today}'").once.ordered
-    partial_mock_stone.should_receive(:log_sh).with("cp #{stone.backup_directory}/tranlog*.dbf #{stone.data_directory}/tranlog").once.ordered
-    partial_mock_stone.should_receive(:topaz_commands).with(/System commitTransaction. SystemRepository restoreFromBackup: '#{stone.extent_backup_filename_for_today}'/).once.ordered
-    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository restoreFromCurrentLogs/).and_return('Restore from transaction log(s) succeeded').once.ordered
-    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository commitRestore/).and_return('commitRestore succeeded').once.ordered
-
+    mock_out_restore_commands(stone, stone.backup_filename_for_today, stone.extent_backup_filename_for_today)
     stone.restore_latest_full_backup
   end
 
   def test_restore_backup_of_another_stone_on_date
     stone = Stone.create(TEST_STONE_NAME)
+    mock_out_restore_commands(stone, '/var/backups/gemstone/anotherstone_2005-05-13.bak.tgz', '/var/backups/gemstone/anotherstone_2005-05-13.full.gz')
+    stone.restore_full_backup('anotherstone', Date.civil(2005, 5, 13))
+  end
+
+  private
+  
+  def mock_out_restore_commands(stone, backup_filename, extent_filename)
     partial_mock_stone = flexmock(stone)
-    
-    partial_mock_stone.should_receive(:log_sh).with("tar -C '#{stone.backup_directory}' -zxf '/var/backups/gemstone/anotherstone_2005-05-13.bak.tgz'").once.ordered
-    partial_mock_stone.should_receive(:topaz_commands).with(%r{SystemRepository restoreFromBackup: '/var/backups/gemstone/anotherstone_2005-05-13.full.gz'}).once.ordered
+
+    partial_mock_stone.should_receive(:recreate!).once.ordered
+    partial_mock_stone.should_receive(:log_sh).with("tar -C '#{stone.backup_directory}' -zxf '#{backup_filename}'").once.ordered
+    partial_mock_stone.should_receive(:log_sh).with("cp #{stone.backup_directory}/tranlog*.dbf #{stone.data_directory}/tranlog/").once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/System commitTransaction. SystemRepository restoreFromBackup: '#{extent_filename}'/).once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository restoreFromCurrentLogs/).and_return('Restore from transaction log(s) succeeded').once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository commitRestore/).and_return('commitRestore succeeded').once.ordered
-
-    stone.restore_full_backup('anotherstone', Date.civil(2005, 5, 13))
   end
 end
 

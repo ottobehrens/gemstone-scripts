@@ -108,10 +108,15 @@ class Stone
     restore_full_backup(name, Date.today)
   end
 
-  def restore_full_backup(stone_name, for_date=Date.today)
+  def recreate!
     stop
     destroy!
     initialize_new_stone
+    start
+  end
+
+  def restore_full_backup(stone_name, for_date=Date.today)
+    recreate!
 
     log_sh "tar -C '#{backup_directory}' -zxf '#{backup_filename(stone_name, for_date)}'"
     log_sh "cp #{backup_directory}/tranlog*.dbf #{data_directory}/tranlog/"
