@@ -125,6 +125,10 @@ class Stone
     run_topaz_command("SystemRepository commitRestore")
   end
 
+  def input_file(topaz_script_filename)
+    topaz_commands(["input #{topaz_script_filename}", "commit"])
+  end
+  
   def system_config_filename
     "#{@gemstone_installation.config_directory}/#@name.conf"
   end

@@ -34,6 +34,14 @@ class StoneUnitTestCase < StoneTestCase
     stone.restore_full_backup('anotherstone', Date.civil(2005, 5, 13))
   end
 
+  def test_run_topaz_file
+    stone = Stone.create(TEST_STONE_NAME)
+    partial_mock_stone = flexmock(stone)
+    partial_mock_stone.should_receive(:topaz_commands).with(["input test.gs", "commit"]).once.ordered
+
+    stone.input_file("test.gs")
+  end
+
   private
   
   def mock_out_restore_commands(stone, backup_filename, extent_filename)
