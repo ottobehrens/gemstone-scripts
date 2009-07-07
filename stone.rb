@@ -219,7 +219,8 @@ class Stone
                              "limit oops 100",
                              "limit bytes 1000",
                              "display oops",
-                             "iferror stack",
+                             "iferr 1 stack",
+                             "iferr 2 exit",
                              commands,
                              "output pop",
                              "exit")
