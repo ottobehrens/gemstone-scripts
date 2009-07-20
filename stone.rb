@@ -10,6 +10,7 @@ class Stone
   attr_reader :log_directory
   attr_reader :data_directory
   attr_reader :backup_directory
+  attr_reader :extent_name
 
   def Stone.existing(name)
     fail "Stone does not exist" if not GemStoneInstallation.current.stones.include? name
@@ -30,6 +31,7 @@ class Stone
     @log_directory = "#{gemstone_installation.base_log_directory}/#@name"
     @data_directory = "#{gemstone_installation.installation_extent_directory}/#@name"
     @backup_directory = gemstone_installation.backup_directory
+    @extent_name = gemstone_installation.initial_extent_name
     @gemstone_installation = gemstone_installation ||= GemStoneInstallation.current
     initialize_gemstone_environment
   end
@@ -125,10 +127,10 @@ class Stone
     run_topaz_command("SystemRepository commitRestore")
   end
 
-  def input_file(topaz_script_filename)
-    topaz_commands(["input #{topaz_script_filename}", "commit"])
+  def input_file(topaz_script_filename, login_first=true)
+    topaz_commands(["input #{topaz_script_filename}", "commit"], login_first)
   end
-  
+
   def system_config_filename
     "#{@gemstone_installation.config_directory}/#@name.conf"
   end
@@ -150,11 +152,11 @@ class Stone
   end
 
   def extent_filename
-    File.join(extent_directory, "extent0.dbf")
+    File.join(extent_directory, extent_name)
   end
 
   def scratch_directory
-    File.join(data_directory, "scratch")
+    File.join(data_directory, "scratch.")
   end
 
   def tranlog_directories
@@ -212,17 +214,18 @@ class Stone
     install(@gemstone_installation.initial_extent, extent_filename, :mode => 0660)
   end
 
-  def topaz_commands(commands)
-    Topaz.new(self).commands("output append #{topaz_logfile}",
-                             "set u #{username} p #{password} gemstone #{name}",
-                             "login",
-                             "limit oops 100",
-                             "limit bytes 1000",
-                             "display oops",
-                             "iferr 1 stack",
-                             "iferr 2 exit",
-                             commands,
-                             "output pop",
-                             "exit")
+  def topaz_commands(user_commands, login_first=true)
+    commands =  ["output append #{topaz_logfile}",
+                 "set u #{username} p #{password} gemstone #{name}" ]
+    commands <<  "login" if login_first
+    commands << ["limit oops 100",
+                 "limit bytes 1000",
+                 "display oops",
+                 "iferror 1 stack",
+                 "iferror 2 exit" ]
+    commands << user_commands
+    commands << ["output pop",
+                 "exit" ]
+    Topaz.new(self).commands(commands)
   end
 end

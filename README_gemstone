@@ -1,0 +1,84 @@
+Rake scripts and ruby files to support installation and management of several
+GemStone server instances.
+
+The original project is at http://github.com/ottobehrens/gemstone-scripts
+
+The scripts provide the following services:
+
+* create, manage and destroy GemStone server instances
+* start, stop and show status of GemStone server instances
+* Manage environment variables needed for each GemStone server instance
+* backup and restore GemStone repositories
+
+By default, these scripts assume / setup / manage the following
+directories:
+
+|--------------------------------------------------+----------------------------|
+| The installation directory.                      | /opt/gemstone/product      |
+|                                                  |                            |
+| There need be only one of these per computer.    |                            |
+| It contains the of GemStone installation.        |                            |
+| It is the source of the new extents.  Many       |                            |
+| GemStone server instances share the common code  |                            |
+| here.  The VM code, libraries and documentation  |                            |
+| live here.                                       |                            |
+|--------------------------------------------------+----------------------------|
+| The config directory.                            | /opt/gemstone/etc/conf.d/  |
+|                                                  |                            |
+| Contains a .conf file for each GemStone server.  |                            |
+| The list of currently managed servers is         |                            |
+| derived from the .conf file names in this        |                            |
+| directory.                                       |                            |
+|--------------------------------------------------+----------------------------|
+| Per-server repository                            | /opt/gemstone/product/data |
+|                                                  |                            |
+| Each server gets a named directory under         |                            |
+| here that holds the extent and tranlogs          |                            |
+| for just that server.                            |                            |
+|--------------------------------------------------+----------------------------|
+| The base log directory                           | /opt/gemstone/log          |
+|                                                  |                            |
+| Each named server gets its own named directory   |                            |
+| under here for log files.                        |                            |
+|--------------------------------------------------+----------------------------|
+| Directory to hold lock files for all servers     | /opt/gemstone/locks        |
+|--------------------------------------------------+----------------------------|
+| Directory to hold backup files for all servers   | /opt/gemstone/backups      |
+|--------------------------------------------------+----------------------------|
+
+Many of the directories will have sub-directories or files based on the
+"name" of the GemStone server.
+
+So, for a server named "devel", we'd have:
+
+|--------------+--------------------------------------|
+| Install Dir  | /opt/gemstone/product                |
+|--------------+--------------------------------------|
+| Config File  | /opt/gemstone/etc/conf.d/devel.conf  |
+|--------------+--------------------------------------|
+| Log Dir      | /opt/gemstone/log/devel              |
+|--------------+--------------------------------------|
+| Data Dir     | /opt/gemstone/data/devel             |
+|--------------+--------------------------------------|
+| Extent Dir   | /opt/gemstone/data/devel/extent      |
+|--------------+--------------------------------------|
+| Tranlog Dir  | /opt/gemstone/data/devel/tranlog     |
+|--------------+--------------------------------------|
+| Backup Dir   | /opt/gemstone/backups                |
+|--------------+--------------------------------------|
+
+The following environment variables are setup:
+
+|------------------+----------------------------------|
+| GEMSTONE         | /opt/gemstone/product            |
+|------------------+----------------------------------|
+| GEMSTONE_NAME    | devel                            |
+|------------------+----------------------------------|
+| GEMSTONE_LOGDIR  | /opt/gemstone/log/devel          |
+|------------------+----------------------------------|
+| GEMSTONE_DATADIR | /opt/gemstone/product/data/devel |
+|------------------+----------------------------------|
+
+Each GemStone server name represents a separate GemStone server instance. 
+All of these share a GemStoneInstallation (a version of the GemStone
+product installed on the machine, e.g., GemStone 3.0.0 Build: 64bit-21842
