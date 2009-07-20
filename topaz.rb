@@ -42,7 +42,7 @@ class Topaz
       consume_until_prompt(io)
       topaz_commands.each do | command |
         command.execute_on_topaz_stream(io)
-	if command != "exit" then
+        if command != "exit" then
           consume_until_prompt(io)
         end
       end
@@ -52,7 +52,7 @@ class Topaz
     end
     return @output
   end
-  
+
   def dump_as_script(*topaz_commands)
     topaz_commands.each do | command |
       command.execute_on_topaz_stream(STDOUT)
