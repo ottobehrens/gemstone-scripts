@@ -37,7 +37,7 @@ class StoneUnitTestCase < StoneTestCase
   def test_run_topaz_file
     stone = Stone.create(TEST_STONE_NAME)
     partial_mock_stone = flexmock(stone)
-    partial_mock_stone.should_receive(:topaz_commands).with(["input test.gs", "commit"]).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(["input test.gs", "commit"], true).once.ordered
 
     stone.input_file("test.gs")
   end

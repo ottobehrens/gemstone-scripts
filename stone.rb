@@ -215,17 +215,18 @@ class Stone
   end
 
   def topaz_commands(user_commands, login_first=true)
-    commands =  ["output append #{topaz_logfile}",
-                 "set u #{username} p #{password} gemstone #{name}" ]
-    commands <<  "login" if login_first
-    commands << ["limit oops 100",
-                 "limit bytes 1000",
-                 "display oops",
-                 "iferr 1 stack",
-                 "iferr 2 exit" ]
-    commands << user_commands
-    commands << ["output pop",
-                 "exit" ]
+    commands = ["output append #{topaz_logfile}",
+                "set u #{username} p #{password} gemstone #{name}" ]
+    commands << "login" if login_first
+    commands.push(
+                "limit oops 100",
+                "limit bytes 1000",
+                "display oops",
+                "iferr 1 stack",
+                "iferr 2 exit" ,
+                user_commands,
+                "output pop",
+                "exit")
     Topaz.new(self).commands(commands)
   end
 end
