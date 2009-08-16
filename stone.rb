@@ -95,7 +95,7 @@ class Stone
 
   def full_backup
     result = run_topaz_command("SystemRepository startNewLog")
-    tranlog_number = ((/(\d*)$/.match(result.last))[1]).to_i
+    tranlog_number = (result.last.split[5]).to_i
     fail if tranlog_number < 0
 
     run_topaz_command("System startCheckpointSync")
