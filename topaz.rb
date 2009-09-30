@@ -30,14 +30,15 @@ end
 class Topaz
   attr_accessor :output
 
-  def initialize(stone, topaz_command="#{ENV['GEMSTONE']}/bin/topaz -l -T 200000")
+  def initialize(stone, topaz_command="topaz -l -T 200000")
     @stone = stone
     @output = []
-    @topaz_command = "#{topaz_command} 2>&1"
+    @topaz_command = "$GEMSTONE/bin/#{topaz_command} 2>&1"
   end
 
   def commands(topaz_commands_array)
     fail "We expect the stone #{@stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !@stone.running?
+    @stone.initialize_gemstone_environment
     IO.popen(@topaz_command, "w+") do |io|
       consume_until_prompt(io)
       topaz_commands_array.each do | command |

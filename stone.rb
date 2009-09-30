@@ -37,6 +37,7 @@ class Stone
   end
 
   def initialize_gemstone_environment
+    @gemstone_installation.set_gemstone_installation_environment
     ENV['GEMSTONE_LOGDIR'] = log_directory
     ENV['GEMSTONE_DATADIR'] = data_directory
   end
