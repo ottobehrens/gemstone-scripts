@@ -232,7 +232,7 @@ class Stone
                 "limit bytes 1000",
                 "display oops",
                 "iferr 1 stack",
-                "iferr 2 exit",
+                "iferr 2 exit 3",
                 user_commands,
                 "output pop",
                 "exit")
