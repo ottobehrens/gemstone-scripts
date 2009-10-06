@@ -50,7 +50,7 @@ class Topaz
     end
     if $?.exitstatus > 0
       raise TopazError.new($?, @output)
-    end
+    end  
     return @output
   end
 
@@ -64,10 +64,15 @@ class Topaz
   private
 
   def consume_until_prompt(io)
-    if result = io.expect(/(^.*> $)/)
-      # remove prompt from output
-      command_output = result[0].gsub(result[1], "")
-      @output << command_output if not command_output.empty?
-    end
+    begin
+      if result = io.expect(/(^topaz(| \d+)> $)/)
+        # remove prompt from output
+        command_output = result[0].gsub(result[1], "")
+        @output << command_output if not command_output.nil? and not command_output.empty?
+      end
+    rescue Exception => error
+      @output << "Unexpected result from topaz #{error.to_s}"
+      raise TopazError.new(5432, @output)
+    end  
   end
 end

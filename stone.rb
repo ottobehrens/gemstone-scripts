@@ -111,7 +111,7 @@ class Stone
 
   def full_backup
     result = run_topaz_command("System startCheckpointSync")
-    fail "Could not start checkpoint, got #{result}" if /\[.*Boolean\] true/ !~ result.last
+    fail "Could not start checkpoint, got #{result.last}" if /\[.*Boolean\] true/ !~ result.last
     result = run_topaz_command("SystemRepository startNewLog")
     tranlog_number = Stone.tranlog_number_from(result.last)
     fail "Could not start a new tranlog" if tranlog_number == -1
@@ -232,7 +232,7 @@ class Stone
                 "limit bytes 1000",
                 "display oops",
                 "iferr 1 stack",
-                "iferr 2 exit" ,
+                "iferr 2 exit",
                 user_commands,
                 "output pop",
                 "exit")
