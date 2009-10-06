@@ -97,7 +97,8 @@ class Stone
   def copy_to(copy_stone)
     fail "You can not copy a running stone" if running?
     fail "You can not copy to a stone that is running" if copy_stone.running?
-    log_sh("cp #{extent_filename} #{copy_stone.extent_filename}")
+    copy_stone.create_skeleton
+    install(extent_filename, copy_stone.extent_filename, :mode => 0660)
   end
 
   def self.tranlog_number_from(string)
