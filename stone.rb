@@ -94,8 +94,19 @@ class Stone
     start
   end
 
+  def copy_to(copy_stone)
+    fail "You can not copy a running stone" if running?
+    fail "You can not copy to a stone that is running" if copy_stone.running?
+    log_sh("cp #{extent_filename} #{copy_stone.extent_filename}")
+  end
+
   def self.tranlog_number_from(string)
     ((/\[.*SmallInteger\] (-?\d*)/.match(string))[1]).to_i
+  end
+
+  def log_sh(command_line)
+    log_command_line(command_line)
+    sh redirect_command_line_to_logfile(command_line)
   end
 
   def full_backup
@@ -206,11 +217,6 @@ class Stone
   def log_gs_sh(command_line)
     log_command_line(command_line)
     gs_sh redirect_command_line_to_logfile(command_line)
-  end
-
-  def log_sh(command_line)
-    log_command_line(command_line)
-    sh redirect_command_line_to_logfile(command_line)
   end
 
   def initialize_extents
