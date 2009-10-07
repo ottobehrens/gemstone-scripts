@@ -45,7 +45,7 @@ class Stone
   # Bare bones stone with nothing loaded, specialise for your situation
   def initialize_new_stone
     create_skeleton
-    initialize_extents
+    copy_clean_extent
   end
 
   def create_skeleton
@@ -219,7 +219,7 @@ class Stone
     gs_sh redirect_command_line_to_logfile(command_line)
   end
 
-  def initialize_extents
+  def copy_clean_extent
     install(@gemstone_installation.initial_extent, extent_filename, :mode => 0660)
   end
 

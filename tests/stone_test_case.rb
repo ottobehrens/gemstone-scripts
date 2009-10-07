@@ -182,7 +182,7 @@ class StoneIntegrationTestCase < StoneTestCase
     config_filename = "#{GemStoneInstallation.current.config_directory}/#{TEST_STONE_NAME}.conf"
     assert ! (File.exist? config_filename)
 
-    stone = Stone.new(TEST_STONE_NAME, GemStoneInstallation.current).create_config_file
+    stone = Stone.new(TEST_STONE_NAME).create_config_file
 
     assert File.exists? config_filename
     assert GemStoneInstallation.current.stones.include?(TEST_STONE_NAME)
