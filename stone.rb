@@ -5,7 +5,6 @@ require 'date'
 
 class Stone
   attr_accessor :username, :password
-
   attr_reader :name
   attr_reader :log_directory
   attr_reader :data_directory
