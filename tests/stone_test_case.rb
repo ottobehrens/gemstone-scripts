@@ -233,5 +233,4 @@ class StoneIntegrationTestCase < StoneTestCase
                           ])
     return random_key
   end
-
 end
