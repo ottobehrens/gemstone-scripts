@@ -2,12 +2,20 @@ require File.join(File.dirname(__FILE__), 'stone')
 
 class GlassStone < Stone
 
-  def run_topaz_commands(*commands)
-    result = topaz_commands(["run", "System myUserProfile objectNamed: #MCPlatformSupport", "%"])
-    if result.last =~ /\[.* UndefinedObject\] nil/
-      super(commands)
+  def bootstrapped_with_mc?
+    result = topaz_commands(["run", "(System myUserProfile objectNamed: #MCPlatformSupport) notNil", "%"])
+    if result.last =~ /^\[.* Boolean\] true/
+      true
     else
+      false
+    end
+  end
+  
+  def run_topaz_commands(*commands)
+    if bootstrapped_with_mc?
       super(commands.unshift("MCPlatformSupport autoCommit: false; autoMigrate: false"))
+    else
+      super(commands)
     end
   end
   
