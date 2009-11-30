@@ -1,12 +1,13 @@
-require 'expect'
 
 class TopazError < RuntimeError
   attr_accessor :exit_status, :output
 
   def to_s
     # Get the child's exit code
+    puts "Topaz Error encountered: "
     puts @exit_status >> 8
     puts @output
+    puts "EOE"
   end
 
   def initialize(exit_status, output)
@@ -25,6 +26,10 @@ class Array
   def execute_on_topaz_stream(topaz_stream)
     join("\n").execute_on_topaz_stream(topaz_stream)
   end
+
+  def line(line_number)
+    self[line_number]
+  end
 end
 
 class Topaz
@@ -32,26 +37,77 @@ class Topaz
 
   def initialize(stone, topaz_command="topaz -l -T 200000")
     @stone = stone
-    @output = []
     @topaz_command = "$GEMSTONE/bin/#{topaz_command} 2>&1"
+    @output = []
   end
 
-  def commands(topaz_commands_array)
+  def output_of_command(index)
+    output[index].last
+  end
+
+  def commands(topaz_commands_array, full_logfile="/tmp/topaz.log")
     fail "We expect the stone #{@stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !@stone.running?
     @stone.initialize_gemstone_environment
-    IO.popen(@topaz_command, "w+") do |io|
-      consume_until_prompt(io)
-      topaz_commands_array.each do | command |
-        command.execute_on_topaz_stream(io)
-        if command != "exit" then
-          consume_until_prompt(io)
-        end
-      end
+
+    send_all_commands_to_topaz_and_exit(topaz_commands_array, full_logfile)
+
+    if topaz_failed?
+      raise_error_with_full_log(full_logfile)
+    else
+      build_up_output_tuple(topaz_commands_array)
+      return @output
     end
-    if $?.exitstatus > 0
-      raise TopazError.new($?, @output)
-    end  
-    return @output
+  end
+
+  def topaz_failed?
+    $?.exitstatus > 0
+  end
+
+  def send_all_commands_to_topaz_and_exit(topaz_commands_array, full_logfile)
+    IO.popen(@topaz_command, "w+") do |io|
+      log_everything_to(full_logfile, io)
+      topaz_commands_array.each_with_index do | command, index |
+        log_command_separately(index, io)
+        command.execute_on_topaz_stream(io)
+        pop_log_output(io)
+      end
+      "exit".execute_on_topaz_stream(io)
+    end
+  end
+
+  def build_up_output_tuple(topaz_commands_array)
+    0.upto(topaz_commands_array.size) do | index |
+      @output << [topaz_commands_array[index], read_output_file("/tmp/topaz.#{index}.log")]
+    end
+  end
+
+  def raise_error_with_full_log(full_logfile)
+    raise TopazError.new($?, File.read(full_logfile))
+  end
+
+  def log_everything_to(full_logfile, io)
+    "output push #{full_logfile}".execute_on_topaz_stream(io)
+  end
+
+  def log_command_separately(index, io)
+    log_file_name = "/tmp/topaz.#{index}.log"
+    File.delete log_file_name if File.exist? log_file_name
+    "output push #{log_file_name}".execute_on_topaz_stream(io)
+  end
+
+  def pop_log_output(io)
+    "output pop".execute_on_topaz_stream(io)
+  end
+
+  def read_output_file(name)
+    return [] if not File.exist? name
+    lines = File.readlines(name)
+    fail "expected #{lines.last} to be 'output pop' or 'Logging out' or 'exit' in file named #{name}" if not match_expected(lines)
+    lines[0..-2]
+  end
+
+  def match_expected(lines)
+    !lines.empty? and lines.last.match(/topaz( \d)?> (output pop|exit)|^Logging out session/)
   end
 
   def dump_as_script(*topaz_commands)
@@ -61,13 +117,4 @@ class Topaz
     self
   end
 
-  private
-
-  def consume_until_prompt(io)
-    if result = io.expect(/(^topaz(| \d+)> $)/)
-      # remove prompt from output
-      command_output = result[0].gsub(result[1], "")
-      @output << command_output if not command_output.nil? and not command_output.empty?
-    end
-  end
 end

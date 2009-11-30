@@ -11,8 +11,8 @@ class StoneUnitTestCase < StoneTestCase
     stone = Stone.create(TEST_STONE_NAME)
     partial_mock_stone = flexmock(stone)
 
-    partial_mock_stone.should_receive(:topaz_commands).with(/System startCheckpointSync/).and_return(["[4202 sz:0 cls: 74241 Boolean] true"]).once.ordered
-    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository startNewLog/).and_return(["[4202 sz:0 cls: 74241 SmallInteger] 1313"]).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/System startCheckpointSync/).and_return([["", ["[4202 sz:0 cls: 74241 Boolean] true"]], ""]).once.ordered
+    partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository startNewLog/).and_return([["", ["[4202 sz:0 cls: 74241 SmallInteger] 1313"]], ""]).once.ordered
     expected_backup_file_name = "#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full"
     partial_mock_stone.should_receive(:topaz_commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_file_name}'/).once.ordered
     

@@ -15,27 +15,34 @@ class TopazTestCase < BaseTestCase
 
   def test_simple_commands
     @topaz.commands(["status", "exit"])
-    fail "Output is #{@topaz.output[1]}" if /^Current settings are\:/ !~ @topaz.output.last
-
-    @topaz.commands(["status", "exit"])
-    fail "Output is #{@topaz.output[1]}" if /^Current settings are\:/ !~ @topaz.output.last
+    fail "Output is #{@topaz.output_of_command(0)}" if /^Current settings are:/ !~ @topaz.output_of_command(0).line(2)
   end
 
   def test_login
-    @topaz.commands(["set gems #{@stone.name} u DataCurator p swordfish", "login", "exit"])
-    fail "Output is #{@topaz.output[2]}" if /^successful login/ !~ @topaz.output.last
+    login_and_run([])
+    fail "Output is #{@topaz.output_of_command(1)}" if /^successful login/ !~ @topaz.output_of_command(1).line(8)
   end
   
   def test_nested_commands
-    @topaz.commands(["set gems #{@stone.name} u DataCurator p swordfish",
-                    "login",
-                    "level 0",
-                    ["printit", "| x |", "x := 6 + 4", "%"],
-                    "exit"])
-    fail "Output is #{@topaz.output.last}" if /^10/ !~ @topaz.output.last
+    login_and_run(["level 0", ["printit", "| x |", "x := 6 + 4", "%"]])
+    fail "Output is #{@topaz.output_of_command(2)}" if /^10/ !~ @topaz.output_of_command(2).line(5)
+  end
+
+  def test_error
+    begin
+      login_and_run([["run", "0 error: 'error'", "%"]])
+    rescue TopazError => error
+      assert(error.output.include?('Arg 2: error'))
+      return
+    end
+    fail 'Error not tripped'
   end
 
   def test_fail
     assert_raises(TopazError) { @topaz.commands(["an invalid command"]) }
+  end
+
+  def login_and_run(commands)
+    @topaz.commands(["set gems #{@stone.name} u DataCurator p swordfish", "login"] << commands << "exit")
   end
 end
