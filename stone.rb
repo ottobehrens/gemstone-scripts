@@ -77,6 +77,14 @@ class Stone
     end
   end
 
+  def start_system
+    start
+  end
+
+  def stop_system
+    stop
+  end
+
   def start
     # Startstone can use single or double quotes around the stone name, so check for either (Yucch)
     gs_sh "startstone -z #{system_config_filename} -l #{File.join(log_directory, @name)}.log #{@name} | grep Info]:.*[\\\'\\\"]#{@name}"
@@ -94,8 +102,8 @@ class Stone
   end
 
   def restart
-    stop
-    start
+    stop_system
+    start_system
   end
 
   def copy_to(copy_stone)
@@ -128,10 +136,10 @@ class Stone
   end
 
   def recreate!
-    stop
+    stop_system
     destroy!
     initialize_new_stone
-    start
+    start_system
   end
 
   def restore_full_backup(stone_name, for_date=Date.today)
