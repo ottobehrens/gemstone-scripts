@@ -139,7 +139,7 @@ class Stone
     stop_system
     destroy!
     initialize_new_stone
-    start_system
+    start
   end
 
   def restore_full_backup(stone_name, for_date=Date.today)
