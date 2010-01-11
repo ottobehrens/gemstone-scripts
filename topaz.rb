@@ -64,7 +64,7 @@ class Topaz
   end
 
   def send_all_commands_to_topaz_and_exit(topaz_commands_array, full_logfile)
-    IO.popen(@topaz_command, "a+") do |io|
+    IO.popen(@topaz_command, "w+") do |io|
       log_everything_to(full_logfile, io)
       topaz_commands_array.each_with_index do | command, index |
         log_command_separately(index, io)
@@ -86,7 +86,7 @@ class Topaz
   end
 
   def log_everything_to(full_logfile, io)
-    "output push #{full_logfile}".execute_on_topaz_stream(io)
+    "output append #{full_logfile}".execute_on_topaz_stream(io)
   end
 
   def log_command_separately(index, io)
