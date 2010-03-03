@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# This starts up a topaz session with a hyper server inside
+# No gem-gem debugging
+# bind explicitly to localhost because we always reverse proxy to localhost
+
+if [ -s $GEMSTONE/seaside/etc/gemstone.secret ]; then
+    . $GEMSTONE/seaside/etc/gemstone.secret
+else
+    echo 'Missing password file $GEMSTONE/seaside/etc/gemstone.secret'
+    exit 1
+fi
+
+# Requires a port number as a parameter
+if [ "a$1" = "a" ]; then
+        echo 'Missing argument <server port number>'
+        exit 1
+fi
+
+# Requires a port number as a parameter
+if [ "a$2" = "a" ]; then
+        echo 'Missing argument <gemstone name>'
+        exit 1
+fi
+
+GEMSTONE_NAME=$2
+echo "GEMSTONE_NAME is $GEMSTONE_NAME"
+
+# Make sure the environment is sane before we start up
+if [ -z $LANG ]; then echo "LANG is not set, bailing out"; exit 3; fi
+if [ -z $GEMSTONE_NAME ]; then echo "GEMSTONE_NAME is not set, bailing out"; exit 3; fi
+
+# Kill anything on this port
+fuser -kn tcp $1
+sleep 1
+fuser -n tcp $1
+if [ $? == 0 ]; then
+    echo "Something is still holding on to port $1. Getting out"
+    exit 2
+fi
+
+$GEMSTONE/bin/topaz -l -T300000 << EOF
+
+output push /tmp/Hyper_server-${1}.log
+set user DataCurator pass $GEMSTONE_CURATOR_PASS gems $2
+
+display oops
+iferror where
+
+login
+
+run
+"record gems pid in the pid file"
+(ObjectLogEntry 
+  info: 'Hyper: startup' 
+  object: 
+    'pid: ', (System gemVersionReport at: 'processId') printString, ' ',
+    'port: ', $1 printString) addToLog.
+System commitTransaction.
+%
+
+run
+| server service site |
+System transactionMode: #manualBegin.
+
+Exception 
+  installStaticException: 
+    [:ex :cat :num :args |
+      "Run the abort in a lowPriority process, since we must acquire the
+       transactionMutex."
+      [
+        SeasidePlatformSupport transactionMutex 
+          critical: [ 
+            SeasidePlatformSupport doAbortTransaction ].
+        System enableSignaledAbortError.
+      ] forkAt: Processor lowestPriority.
+    ]
+  category: GemStoneError
+  number: 6009
+  subtype: nil.
+System enableSignaledAbortError.
+"This thread is needed to handle the SigAbort exception, when the primary
+ thread is blocked on an accept. Assuming default 60 second 
+ STN_GEM_ABORT_TIMEOUT, wake up at 30 second intervals."
+[ 
+  [ true ] whileTrue: [ (Delay forSeconds: 30) wait ].
+] forkAt: Processor lowestPriority.
+
+server := (HTTPServer new)
+		acceptInForeground: true;
+		multiThreading: true;
+		hostName: 'localhost'; " <- The reason for the inline "
+		portNumber: $1;
+		yourself.
+service := SeasideHTTPService new server: server.
+GsFile gciLogServer: 'Hyper Server started on port ', $1 printString.
+service start.
+"does not return, unless there's an error"
+%
+run
+System beginTransaction.
+(ObjectLogEntry
+  fatal: 'Hyper: topaz exit'
+  object:
+    'port: ', $1 printString, ' ',
+    'pid: ', (System gemVersionReport at: 'processId') printString) addToLog.
+System commitTransaction.
+%
+EOF
+
+
