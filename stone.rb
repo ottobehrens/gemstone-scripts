@@ -77,6 +77,14 @@ class Stone
     end
   end
 
+  def start_system
+    start
+  end
+
+  def stop_system
+    stop
+  end
+
   def start
     # Startstone can use single or double quotes around the stone name, so check for either (Yucch)
     gs_sh "startstone -z #{system_config_filename} -l #{File.join(log_directory, @name)}.log #{@name} | grep Info]:.*[\\\'\\\"]#{@name}"
@@ -94,8 +102,8 @@ class Stone
   end
 
   def restart
-    stop
-    start
+    stop_system
+    start_system
   end
 
   def copy_to(copy_stone)
@@ -116,9 +124,9 @@ class Stone
 
   def full_backup
     result = run_topaz_command("System startCheckpointSync")
-    fail "Could not start checkpoint, got #{result.last}" if /\[.*Boolean\] true/ !~ result.last
+    fail "Could not start checkpoint, got #{result[-2].last}" if /\[.*Boolean\] true/ !~ result[-2].last.last
     result = run_topaz_command("SystemRepository startNewLog")
-    tranlog_number = Stone.tranlog_number_from(result.last)
+    tranlog_number = Stone.tranlog_number_from(result[-2].last.last)
     fail "Could not start a new tranlog" if tranlog_number == -1
     run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{backup_filename_prefix_for_today}'")
   end
@@ -128,7 +136,7 @@ class Stone
   end
 
   def recreate!
-    stop
+    stop_system
     destroy!
     initialize_new_stone
     start
@@ -229,19 +237,15 @@ class Stone
   end
 
   def topaz_commands(user_commands, login_first=true)
-    commands = ["output append #{topaz_logfile}",
-                "set u #{username} p #{password} gemstone #{name}" ]
+    commands = ["set u #{username} p #{password} gemstone #{name}" ]
     commands << "login" if login_first
-    commands.push(
-                "limit oops 100",
-                "limit bytes 1000",
-                "display oops",
-                "iferr 1 stack",
-                "iferr 2 exit 3",
-                user_commands,
-                "output pop",
-                "exit")
-    Topaz.new(self).commands(commands)
+    commands.push(["limit oops 100",
+                  "limit bytes 1000",
+                  "display oops",
+                  "iferr 1 stack",
+                  "iferr 2 exit 3"],
+                  user_commands)
+    Topaz.new(self).commands(commands, topaz_logfile)
   end
 
   private
