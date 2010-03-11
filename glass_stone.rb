@@ -2,6 +2,8 @@ require File.join(File.dirname(__FILE__), 'stone')
 
 class GlassStone < Stone
 
+  @@gemstone_scripts_directory = File.expand_path(File.dirname(__FILE__))
+
   def bootstrapped_with_mc?
     result = topaz_commands(["run", "(System myUserProfile objectNamed: #MCPlatformSupport) notNil", "%"])
     if result.last =~ /^\[.* Boolean\] true/
@@ -32,8 +34,9 @@ class GlassStone < Stone
       service_directory = "/service/#{service_name}"
       fail "Service directory #{service_directory} exists, please remove it manually, ensuring all services are stopped" if File.exists? service_directory
       mkdir_p "#{service_directory}/log"
-      service_skeleton = "#{File.expand_path(File.dirname(__FILE__))}/service_skeleton"
-      sh "cd #{service_skeleton}; find -path ./gemstone-scripts/.git -prune -o -print | cpio -p --dereference #{service_directory}"
+      service_skeleton = "#{@@gemstone_scripts_directory}/service_skeleton"
+      sh "cd #{service_skeleton}; find -path .git -prune -o -print | cpio -p #{service_directory}"
+      sh "ln -s #{@@gemstone_scripts_directory}/run_hyper_service #{service_directory}/run"
       touch "#{service_directory}/down"
     end
   end
@@ -52,14 +55,18 @@ class GlassStone < Stone
 
   def start_hyper(port)
     if pid=fork
-      system("nohup glass-hyper #{port} #{name} &")
+      system("nohup #{glass_hyper_command(port)} &")
       Process.detach(pid)
     end
   end
 
   def start_hyper_fg(port)
     raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG'] 
-    system("glass-hyper #{port} '#{name}'")
+    system(glass_hyper_command(port))
+  end
+
+  def glass_hyper_command(port)
+    "#{@@gemstone_scripts_directory}/glass_hyper #{port} '#{name}'"
   end
 
   def start_system
