@@ -1,3 +1,4 @@
+require 'rake'
 require File.join(File.dirname(__FILE__), 'stone')
 
 class GlassStone < Stone
