@@ -14,4 +14,4 @@ read USERNAME
 git config user.email $EMAIL
 git config user.name "$USERNAME"
 echo "Pushing as $USERNAME at $EMAIL"
-git push github-push
+git push
