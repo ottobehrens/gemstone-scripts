@@ -173,7 +173,7 @@ $HTTP["host"] == "#{name}" {
   end
 
   def fuser_hyper_port(port, extra_flags = "")
-    sh "echo #{name}; fuser #{extra_flags} -n tcp #{port}" do |ok, status|
+    sh "echo #{name}; fuser #{extra_flags} -n tcp #{port} 2>/dev/null" do |ok, status|
       if !ok
         puts "Could not find a hyper on port #{port}"
       end
