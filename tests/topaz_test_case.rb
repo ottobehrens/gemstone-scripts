@@ -20,7 +20,7 @@ class TopazTestCase < BaseTestCase
 
   def test_login
     login_and_run([])
-    fail "Output is #{@topaz.output_of_command(1)}" if /^successful login/ !~ @topaz.output_of_command(1).line(8)
+    fail "Output is #{@topaz.output_of_command(1)}" if /^successful login/ !~ @topaz.output_of_command(1).line(7)
   end
   
   def test_nested_commands
