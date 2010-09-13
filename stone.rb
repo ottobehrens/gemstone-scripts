@@ -51,7 +51,9 @@ class Stone
     create_config_file
     mkdir_p extent_directory
     mkdir_p log_directory
-    mkdir_p tranlog_directories
+    tranlog_directories do | tranlog_dir |
+      if !File.exists?(tranlog_dir) then mkdir_p tranlog_dir end
+    end
   end
 
   # Will remove everything in the stone's data directory!
