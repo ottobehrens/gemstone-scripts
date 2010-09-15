@@ -7,15 +7,22 @@ class StoneTestCase < BaseTestCase
 end
 
 class StoneUnitTestCase < StoneTestCase
-  def test_full_backup
-    stone = Stone.create(TEST_STONE_NAME)
+  def mock_full_backup_to(stone, expected_backup_file_name)
     partial_mock_stone = flexmock(stone)
-
     partial_mock_stone.should_receive(:topaz_commands).with(/System startCheckpointSync/).and_return([["", ["[4202 sz:0 cls: 74241 Boolean] true"]], ""]).once.ordered
     partial_mock_stone.should_receive(:topaz_commands).with(/SystemRepository startNewLog/).and_return([["", ["[4202 sz:0 cls: 74241 SmallInteger] 1313"]], ""]).once.ordered
-    expected_backup_file_name = "#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full"
     partial_mock_stone.should_receive(:topaz_commands).with(/System abortTransaction. SystemRepository fullBackupCompressedTo: '#{expected_backup_file_name}'/).once.ordered
-    
+  end
+
+  def test_full_backup_to_specific_file
+    stone = Stone.create(TEST_STONE_NAME)
+    mock_full_backup_to(stone, "/tmp/temporary_backup")
+    stone.full_backup("/tmp/temporary_backup")
+  end
+
+  def test_full_backup
+    stone = Stone.create(TEST_STONE_NAME)
+    mock_full_backup_to(stone, "#{stone.backup_directory}/#{stone.name}_#{Date.today.strftime('%F')}.full")
     stone.full_backup
   end
 
@@ -23,6 +30,12 @@ class StoneUnitTestCase < StoneTestCase
     stone = Stone.create(TEST_STONE_NAME)
     mock_out_restore_commands(stone, stone.backup_filename_for_today)
     stone.restore_latest_full_backup
+  end
+
+  def test_restore_backup_from_named_file
+    stone = Stone.create(TEST_STONE_NAME)
+    mock_out_restore_commands(stone, "/tmp/koos.backup")
+    stone.restore_full_backup_from_named_file("/tmp/koos.backup")
   end
 
   def test_restore_backup_of_another_stone_on_date
