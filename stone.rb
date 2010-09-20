@@ -51,7 +51,7 @@ class Stone
     create_config_file
     mkdir_p extent_directory
     mkdir_p log_directory
-    tranlog_directories do | tranlog_dir |
+    tranlog_directories.each do | tranlog_dir |
       if !File.exists?(tranlog_dir) then mkdir_p tranlog_dir end
     end
   end
