@@ -51,9 +51,9 @@ class Stone
     create_config_file
     mkdir_p extent_directory
     mkdir_p log_directory
-    puts "Tranlog directories: " + tranlog_directories.to_s
-    tranlogs_is_null = tranlog_directories.inject(false) do | found, aDirectory | found ||= aDirectory == "/dev/null" end
-    if not tranlogs_is_null then mkdir_p tranlog_directories end
+    tranlog_directories.each do | tranlog_dir |
+      if !File.exists?(tranlog_dir) then mkdir_p tranlog_dir end
+    end
   end
 
   # Will remove everything in the stone's data directory!
@@ -63,6 +63,13 @@ class Stone
     rm_rf extent_directory
     rm_rf log_directory
     rm_rf tranlog_directories
+  end
+
+  def recreate!
+    stop_system
+    destroy!
+    initialize_new_stone
+    start
   end
 
   def running?(wait_time = -1)
@@ -124,29 +131,26 @@ class Stone
     sh redirect_command_line_to_logfile(command_line)
   end
 
-  def full_backup
+  def full_backup(file_name_prefix=backup_filename_prefix_for_today)
     result = run_topaz_command("System startCheckpointSync")
     fail "Could not start checkpoint, got #{result[-2].last}" if /\[.*Boolean\] true/ !~ result[-2].last.last
     result = run_topaz_command("SystemRepository startNewLog")
     tranlog_number = Stone.tranlog_number_from(result[-2].last.last)
     fail "Could not start a new tranlog" if tranlog_number == -1
-    run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{backup_filename_prefix_for_today}'")
+    run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{file_name_prefix}'")
   end
 
   def restore_latest_full_backup
-    restore_full_backup(name, Date.today)
-  end
-
-  def recreate!
-    stop_system
-    destroy!
-    initialize_new_stone
-    start
+    restore_full_backup_from_named_file
   end
 
   def restore_full_backup(stone_name, for_date=Date.today)
+    restore_full_backup_from_named_file(backup_filename(stone_name, for_date))
+  end
+
+  def restore_full_backup_from_named_file(file_name=backup_filename_for_today)
     recreate!
-    run_topaz_commands("System abortTransaction. SystemRepository restoreFromBackup: '#{backup_filename(stone_name, for_date)}'")
+    run_topaz_commands("System abortTransaction. SystemRepository restoreFromBackup: '#{file_name}'")
     run_topaz_commands("SystemRepository commitRestore")
   end
 
