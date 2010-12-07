@@ -53,7 +53,7 @@ class Stone
     mkdir_p log_directory
     puts "Tranlog directories: " + tranlog_directories.to_s
     tranlogs_is_null = tranlog_directories.inject(false) do | found, aDirectory | found ||= aDirectory == "/dev/null" end
-    if tranlogs_is_null then mkdir_p tranlog_directories end
+    if not tranlogs_is_null then mkdir_p tranlog_directories end
   end
 
   # Will remove everything in the stone's data directory!
