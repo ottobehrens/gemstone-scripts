@@ -1,6 +1,6 @@
 require File.join(File.dirname(__FILE__), 'gemstone_installation')
 require File.join(File.dirname(__FILE__), 'topaz')
-
+ 
 require 'date'
 
 class Stone
