@@ -51,7 +51,8 @@ class GlassStone < Stone
 
   def start_hypers
     GlassStone.clear_status
-    services_names.each { |service_name| sh "svc -u /service/#{service_name}" }
+    services_names.each { |service_name| 
+      sh "svc -u /service/#{service_name}" }
   end
 
   def start_hyper(port)
@@ -149,11 +150,14 @@ $HTTP["host"] == "#{name}" {
   end
 
   def hyper_ports_lighty
-    lighty_config.scan(/HTTP\["host"\][^}]*\}/).each do | section | 
-      if section =~ /#{name}/
-        return section.scan(/"port" => (\d{4})/).flatten
-      end
-    end 
+    return lighty_config.scan(/"port" => (\d{4})/).flatten
+    
+    #lighty_config.scan(/HTTP\["host"\][^}]*\}/).each do | section | 
+      # if section =~ /#{name}/
+      #   return section.scan(/"port" => (\d{4})/).flatten
+      # end
+    #end 
+    
     fail "Could not find ports for #{name} in #{lighty_config}"
   end
 
