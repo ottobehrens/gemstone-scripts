@@ -150,14 +150,11 @@ $HTTP["host"] == "#{name}" {
   end
 
   def hyper_ports_lighty
-    return lighty_config.scan(/"port" => (\d{4})/).flatten
-    
-    #lighty_config.scan(/HTTP\["host"\][^}]*\}/).each do | section | 
-      # if section =~ /#{name}/
-      #   return section.scan(/"port" => (\d{4})/).flatten
-      # end
-    #end 
-    
+    lighty_config.scan(/HTTP\["host"\][^}]*\}/).each do | section | 
+       if section =~ /#{name}/
+         return section.scan(/"port" => (\d{4})/).flatten
+       end
+    end 
     fail "Could not find ports for #{name} in #{lighty_config}"
   end
 
