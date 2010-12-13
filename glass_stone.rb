@@ -114,8 +114,8 @@ class GlassStone < Stone
   end
 
   def lighty_config
-    Dir["/etc/lighttpd/conf-available/99-*.conf"].inject('') do | result, config_file_name |
-      result + File.open(config_file_name).read
+    Dir["/etc/lighttpd/conf-available/99-*.conf"].collect do | config_file_name |
+      File.open(config_file_name) { | file | file.read }
     end
   end
 
@@ -150,12 +150,10 @@ $HTTP["host"] == "#{name}" {
   end
 
   def hyper_ports_lighty
-    lighty_config.scan(/HTTP\["host"\][^}]*\}/).each do | section | 
-       if section =~ /#{name}/
-         return section.scan(/"port" => (\d{4})/).flatten
-       end
-    end 
-    fail "Could not find ports for #{name} in #{lighty_config}"
+    lighty_config.detect(lambda{fail "Could not find ports for #{name} in #{lighty_config}"}) do | config |
+      /HTTP\["host"\]\s+=~\s+"#{name}"\s+\{/ =~ config
+    end
+    $~.post_match.scan(/"port" => (\d{4})/).flatten
   end
 
   def services_names
