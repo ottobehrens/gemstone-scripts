@@ -17,7 +17,8 @@ class GemStoneInstallation
                  installation_extent_directory="/opt/gemstone/product/data",
                  base_log_directory="/opt/gemstone/log",
                  backup_directory="/opt/gemstone/backups",
-                 initial_extent_name='extent0.dbf')
+                 initial_extent_name='extent0.dbf',
+                 seaside_extent_name='extent0.seaside.dbf')
 
     @installation_directory = installation_directory
     @config_directory = config_directory
@@ -25,6 +26,7 @@ class GemStoneInstallation
     @installation_extent_directory = installation_extent_directory
     @backup_directory = backup_directory
     @initial_extent_name = initial_extent_name
+    @seaside_extent_name = seaside_extent_name
   end
 
   def set_gemstone_installation_environment
@@ -65,5 +67,9 @@ class GemStoneInstallation
 
   def initial_extent
     File.join(@installation_directory, "bin", @initial_extent_name)
+  end
+
+  def seaside_extent
+    File.join(@installation_directory, "bin", @seaside_extent_name)
   end
 end

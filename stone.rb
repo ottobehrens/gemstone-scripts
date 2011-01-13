@@ -242,6 +242,10 @@ class Stone
     install(@gemstone_installation.initial_extent, extent_filename, :mode => 0660)
   end
 
+  def copy_seaside_extent
+    install(@gemstone_installation.seaside_extent, extent_filename, :mode => 0660)
+  end
+
   def topaz_commands(user_commands, login_first=true)
     commands = ["set u #{username} p #{password} gemstone #{name}" ]
     commands << "login" if login_first
