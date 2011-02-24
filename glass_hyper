@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This starts up a topaz session with a hyper server inside
+# This starts up a topaz session with a Swazoo server inside
 # No gem-gem debugging
 # bind explicitly to localhost because we always reverse proxy to localhost
 
@@ -41,7 +41,7 @@ fi
 
 $GEMSTONE/bin/topaz -l -T300000 << EOF
 
-output push /tmp/Hyper_server-${1}.log
+output push /tmp/Swazoo_server-${1}.log
 set user DataCurator pass $GEMSTONE_CURATOR_PASS gems $2
 
 display oops
@@ -49,18 +49,18 @@ iferror where
 
 login
 
+
 run
 "record gems pid in the pid file"
-(ObjectLogEntry 
-  info: 'Hyper: startup' 
-  object: 
-    'pid: ', (System gemVersionReport at: 'processId') printString, ' ',
-    'port: ', $1 printString) addToLog.
-System commitTransaction.
+| file |
+(GsFile isServerDirectory: '$GEMSTONE_DATADIR') ifFalse: [ ^nil ].
+file := GsFile openWriteOnServer: '$GEMSTONE_DATADIR/${1}_server-${2}.pid'.
+file nextPutAll: (System gemVersionReport at: 'processId') printString.
+file cr.
+file close.
 %
 
 run
-| server service site |
 System transactionMode: #manualBegin.
 
 Exception 
@@ -69,9 +69,9 @@ Exception
       "Run the abort in a lowPriority process, since we must acquire the
        transactionMutex."
       [
-        SeasidePlatformSupport transactionMutex 
+        GRPlatform current transactionMutex 
           critical: [ 
-            SeasidePlatformSupport doAbortTransaction ].
+            GRPlatform current doAbortTransaction ].
         System enableSignaledAbortError.
       ] forkAt: Processor lowestPriority.
     ]
@@ -86,26 +86,21 @@ System enableSignaledAbortError.
   [ true ] whileTrue: [ (Delay forSeconds: 30) wait ].
 ] forkAt: Processor lowestPriority.
 
-server := (HTTPServer new)
-		acceptInForeground: true;
-		multiThreading: true;
-		hostName: 'localhost'; " <- The reason for the inline "
-		portNumber: $1;
-		yourself.
-service := SeasideHTTPService new server: server.
-GsFile gciLogServer: 'Hyper Server started on port ', $1 printString.
-service start.
-"does not return, unless there's an error"
+
+GsFile gciLogServer: 'GS Web Server started on port ', $1 printString.
+
+WAGemStoneRunSeasideGems startGemServerOn: $1.
+"does not return"
 %
 run
+GemToGemAnnouncement uninstallStaticHandler.
 System beginTransaction.
 (ObjectLogEntry
-  fatal: 'Hyper: topaz exit'
+  fatal: '$2: topaz exit'
   object:
     'port: ', $1 printString, ' ',
     'pid: ', (System gemVersionReport at: 'processId') printString) addToLog.
 System commitTransaction.
 %
 EOF
-
 
