@@ -160,7 +160,7 @@ $HTTP["host"] == "#{name}" {
 
   def hyper_ports_lighty
     lighty_config.detect(lambda{fail "Could not find ports for #{name} in #{lighty_config}"}) do | config |
-      /HTTP\["host"\]\s+=~\s+"#{name}"\s+\{/ =~ config
+      /HTTP\["host"\]\s+==\s+"#{name}"\s+\{/ =~ config
     end
     $~.post_match.scan(/"port" => (\d{4})/).flatten
   end
