@@ -126,12 +126,13 @@ class GlassStone < Stone
 
   def lighty_config_template(ports)
     return <<-TEMPLATE
-$HTTP["host"] =~ "#{name}" {
-  $HTTP["url"] =~ "^/datafiles/|^/resources/|^/tfiles/" {
+$HTTP["host"] == "#{name}" {
+  $HTTP["url"] =~ "^/datafiles/|^/resources/|^/tfiles/^/documents/" {
     alias.url += (
       "/datafiles/" => "/home/wonka/projects/wonka/resources/",
       "/resources/" => "/var/local/gemstone/#{name}/resources/",
-      "/tfiles/" => "/tmp/#{name}/"
+      "/tfiles/" => "/tmp/#{name}/",
+      "/documents/" => "/home/wonka/projects/wonka/resources/"
     )
   } else $HTTP["url"] =~ ".*" {
     proxy.server  = ( "" => ( 
