@@ -186,7 +186,7 @@ $HTTP["host"] == "#{name}" {
       else
         puts "Could not find a hyper on port #{port}"
       end
-      return true
+      return ok
     end
     return false
   end
