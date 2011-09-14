@@ -30,14 +30,21 @@ class GlassStone < Stone
     sh "svc -o /service/clear"
   end
 
+  def service_skeleton_template
+    File.join(@@gemstone_scripts_directory, 'service_skeleton')
+  end
+
+  def hyper_service_file
+    File.join(@@gemstone_scripts_directory, 'run_hyper_service')
+  end
+
   def create_daemontools_structure
     services_names.each do |service_name|
       service_directory = "/service/#{service_name}"
       fail "Service directory #{service_directory} exists, please remove it manually, ensuring all services are stopped" if File.exists? service_directory
       mkdir_p "#{service_directory}/log"
-      service_skeleton = "#{@@gemstone_scripts_directory}/service_skeleton"
-      sh "cd #{service_skeleton}; find -path .git -prune -o -print | cpio -p #{service_directory}"
-      sh "ln -s #{@@gemstone_scripts_directory}/run_hyper_service #{service_directory}/run"
+      sh "cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{service_directory}"
+      sh "ln -s #{hyper_service_file} #{service_directory}/run"
       touch "#{service_directory}/down"
     end
   end
