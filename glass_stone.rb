@@ -134,7 +134,7 @@ class GlassStone < Stone
   def lighty_config_template(ports)
     return <<-TEMPLATE
 $HTTP["host"] == "#{name}" {
-  $HTTP["url"] =~ "^/documents/|^/tfiles/^/resources/" {
+  $HTTP["url"] =~ "^/documents/|^/tfiles/^|/resources/" {
     alias.url += (
       "/documents/" => "/var/local/gemstone/#{name}/public_uploads/",
       "/tfiles/" => "/tmp/#{name}/",
