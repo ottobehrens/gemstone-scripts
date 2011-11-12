@@ -82,7 +82,7 @@ class Topaz
   end
 
   def raise_error_with_full_log(full_logfile)
-    raise TopazError.new($?, File.read(full_logfile))
+    raise TopazError.new($?, File.read(full_logfile)[-5000..-1])
   end
 
   def log_everything_to(full_logfile, io)
