@@ -73,9 +73,7 @@ class Stone
   end
 
   def running?(wait_time = -1)
-    gs_sh "waitstone #@name #{wait_time} 1>/dev/null" do | ok, status |
-      return ok
-    end
+    gs_sh "waitstone #@name #{wait_time} 1>/dev/null"
   end
 
   def status

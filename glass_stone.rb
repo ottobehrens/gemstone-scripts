@@ -27,7 +27,7 @@ class GlassStone < Stone
   end
 
   def GlassStone.clear_status
-    sh "svc -o /service/clear"
+    system("svc -o /service/clear")
   end
 
   def service_skeleton_template
@@ -43,8 +43,8 @@ class GlassStone < Stone
       service_directory = "/service/#{service_name}"
       fail "Service directory #{service_directory} exists, please remove it manually, ensuring all services are stopped" if File.exists? service_directory
       mkdir_p "#{service_directory}/log"
-      sh "cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{service_directory}"
-      sh "ln -s #{hyper_service_file} #{service_directory}/run"
+      system("cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{service_directory}")
+      system("ln -s #{hyper_service_file} #{service_directory}/run")
       touch "#{service_directory}/down"
     end
   end
@@ -59,7 +59,7 @@ class GlassStone < Stone
   def start_hypers
     GlassStone.clear_status
     services_names.each { |service_name| 
-      sh "svc -u /service/#{service_name}" }
+      system("svc -u /service/#{service_name}") }
   end
 
   def start_hyper(port)
@@ -95,7 +95,7 @@ class GlassStone < Stone
   end
 
   def stop_hypers
-    services_names.each { |service_name| sh "svc -d /service/#{service_name}" }
+    services_names.each { |service_name| system("svc -d /service/#{service_name}") }
     sleep 1
     fuser_hyper_ports("-k")
   end
@@ -176,7 +176,7 @@ $HTTP["host"] == "#{name}" {
   end
 
   def status_hyper_port(port)
-    sh "svstat /service/#{name}-#{port}"
+    system("svstat /service/#{name}-#{port}")
     fuser_hyper_port(port)
   end
 
@@ -187,15 +187,13 @@ $HTTP["host"] == "#{name}" {
   end
 
   def fuser_hyper_port(port, extra_flags = "")
-    sh "fuser #{extra_flags} -n tcp #{port} 2> /dev/null" do |ok, status|
-      if ok
-        puts " = pid of process running a hyper on port #{port}"
-      else
-        puts "Could not find a hyper on port #{port}"
-      end
-      return ok
+    if system("fuser #{extra_flags} -n tcp #{port} 2> /dev/null") then
+      puts " = pid of process running a hyper on port #{port}"
+      true
+    else
+      puts "Could not find a hyper on port #{port}"
+      false
     end
-    return false
   end
 end
 
