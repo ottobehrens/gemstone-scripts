@@ -2,6 +2,7 @@ require File.join(File.dirname(__FILE__), 'gemstone_installation')
 require File.join(File.dirname(__FILE__), 'topaz')
  
 require 'date'
+require 'fileutils'
 
 class Stone
   attr_accessor :username, :password
@@ -49,20 +50,20 @@ class Stone
 
   def create_skeleton
     create_config_file
-    mkdir_p extent_directory
-    mkdir_p log_directory
+    FileUtils.mkdir_p extent_directory
+    FileUtils.mkdir_p log_directory
     tranlog_directories.each do | tranlog_dir |
-      if !File.exists?(tranlog_dir) then mkdir_p tranlog_dir end
+      if !File.exists?(tranlog_dir) then FileUtils.mkdir_p tranlog_dir end
     end
   end
 
   # Will remove everything in the stone's data directory!
   def destroy!
     fail "Can not destroy a running stone" if running?
-    rm_rf system_config_filename
-    rm_rf extent_directory
-    rm_rf log_directory
-    rm_rf tranlog_directories
+    FileUtils.rm_rf system_config_filename
+    FileUtils.rm_rf extent_directory
+    FileUtils.rm_rf log_directory
+    FileUtils.rm_rf tranlog_directories
   end
 
   def recreate!
@@ -117,7 +118,7 @@ class Stone
     fail "You can not copy a running stone" if running?
     fail "You can not copy to a stone that is running" if copy_stone.running?
     copy_stone.create_skeleton
-    install(extent_filename, copy_stone.extent_filename, :mode => 0660)
+    FileUtils.install(extent_filename, copy_stone.extent_filename, :mode => 0660)
   end
 
   def self.tranlog_number_from(string)
@@ -126,7 +127,7 @@ class Stone
 
   def log_sh(command_line)
     log_command_line(command_line)
-    sh redirect_command_line_to_logfile(command_line)
+    system(redirect_command_line_to_logfile(command_line))
   end
 
   def full_backup(file_name_prefix=backup_filename_prefix_for_today)
@@ -210,7 +211,7 @@ class Stone
   end
 
   def command_logfile
-    mkdir_p log_directory
+    FileUtils.mkdir_p log_directory
     "#{log_directory}/stone_command_output.log"
   end
 
@@ -237,11 +238,11 @@ class Stone
   end
 
   def copy_clean_extent
-    install(@gemstone_installation.initial_extent, extent_filename, :mode => 0660)
+    FileUtils.install(@gemstone_installation.initial_extent, extent_filename, :mode => 0660)
   end
 
   def copy_seaside_extent
-    install(@gemstone_installation.seaside_extent, extent_filename, :mode => 0660)
+    FileUtils.install(@gemstone_installation.seaside_extent, extent_filename, :mode => 0660)
   end
 
   def topaz_commands(user_commands, login_first=true)
