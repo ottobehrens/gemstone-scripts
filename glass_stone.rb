@@ -136,7 +136,7 @@ class GlassStone < Stone
 $HTTP["host"] == "#{name}" {
   $HTTP["url"] =~ "^/documents/|^/tfiles/^|/resources/" {
     alias.url += (
-      "/documents/" => "/var/local/gemstone/#{name}/public_uploads/",
+      "/documents/" => "/var/local/gemstone/#{name}/documents/",
       "/tfiles/" => "/tmp/#{name}/",
       "/resources/" => "/home/wonka/projects/wonka/resources/"
     )
