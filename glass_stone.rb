@@ -150,8 +150,11 @@ $HTTP["host"] == "#{name}" {
   end
 
   def create_lighty_config(ports)
-    File.open("/etc/lighttpd/conf-available/99-#{name}.conf", "w+") do | file |
-      file.print(lighty_config_template(ports))
+    conf_file_name = "/etc/lighttpd/conf-available/99-#{name}.conf"
+    if not File.exists?(conf_file_name) then
+      File.open(conf_file_name, "w+") do | file |
+        file.print(lighty_config_template(ports))
+      end
     end
   end
 

@@ -254,6 +254,7 @@ class Stone
                   "iferr 1 stack",
                   "iferr 2 exit 3"],
                   user_commands)
+    puts "topaz> #{user_commands.join(' ')}"
     Topaz.new(self).commands(commands, topaz_logfile)
   end
 
