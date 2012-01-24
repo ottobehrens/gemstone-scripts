@@ -67,7 +67,9 @@ class Topaz
     IO.popen(@topaz_command, "w+") do |io|
       log_everything_to(full_logfile, io)
       topaz_commands_array.each_with_index do | command, index |
+        log_command_separately(index, io)
         command.execute_on_topaz_stream(io)
+        pop_log_output(io)
       end
       "exit".execute_on_topaz_stream(io)
     end
@@ -75,7 +77,7 @@ class Topaz
 
   def build_up_output_tuple(topaz_commands_array)
     0.upto(topaz_commands_array.size) do | index |
-      @output << [topaz_commands_array[index], 'some output'] # read_output_file("/tmp/topaz.#{index}.log")]
+      @output << [topaz_commands_array[index], read_output_file("/tmp/topaz.#{index}.log")]
     end
   end
 
