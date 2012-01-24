@@ -40,9 +40,12 @@ class GemStoneInstallation
   end
 
   # Execute command in this installation's environment
-  def gs_sh(command, &block)
+  def gs_sh(command)
     set_gemstone_installation_environment
-    sh "$GEMSTONE/bin/#{command}", &block
+    system("$GEMSTONE/bin/#{command}")
+    # output = `$GEMSTONE/bin/#{command} 2>&1`
+    # if not output.empty? then puts output end
+    # $? == 0
   end
 
   def gslist
