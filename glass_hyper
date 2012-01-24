@@ -39,7 +39,7 @@ if [ $? == 0 ]; then
     exit 2
 fi
 
-$GEMSTONE/bin/topaz -l -T300000 << EOF
+exec $GEMSTONE/bin/topaz -l -T300000 << EOF
 
 output push /tmp/Swazoo_server-${1}.log
 set user DataCurator pass $GEMSTONE_CURATOR_PASS gems $2

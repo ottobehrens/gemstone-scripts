@@ -62,20 +62,13 @@ class GlassStone < Stone
       sh "svc -u /service/#{service_name}" }
   end
 
-  def start_hyper(port)
-    if pid=fork
-      system("nohup #{glass_hyper_command(port)} &")
-      Process.detach(pid)
-    end
-  end
-
   def start_hyper_fg(port)
     raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG'] 
-    system(glass_hyper_command(port))
+    exec(glass_hyper_command(port))
   end
 
   def glass_hyper_command(port)
-    "#{@@gemstone_scripts_directory}/glass_hyper #{port} '#{name}'"
+    "exec #{@@gemstone_scripts_directory}/glass_hyper #{port} '#{name}'"
   end
 
   def start_system
