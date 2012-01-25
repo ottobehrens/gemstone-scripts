@@ -59,7 +59,8 @@ class GlassStone < Stone
   def start_hypers
     GlassStone.clear_status
     services_names.each { |service_name| 
-      system("svc -u /service/#{service_name}") }
+      option = if name == 'development' then 'o' else 'u' end
+      system("svc -#{option} /service/#{service_name}") }
   end
 
   def start_hyper_fg(port)
