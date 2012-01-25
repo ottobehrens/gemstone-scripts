@@ -107,7 +107,7 @@ class GlassStone < Stone
   def any_hyper_supposed_to_be_running?
     services_names.detect do |service_name|
       !(`svstat /service/#{service_name}` =~ /service\/#{service_name}: up/).nil? and \
-      !File.exists("/service/#{service_name}/down")
+      !File.exists?("/service/#{service_name}/down")
     end
   end
 
