@@ -77,6 +77,14 @@ class GlassStone < Stone
     start_hypers
   end
 
+  def wait_for_hypers_to_stop(timeout_in_seconds = 20)
+    counter = 0
+    while any_hyper_running? and counter < timeout_in_seconds
+      sleep 1
+      counter = counter + 1
+    end
+  end
+
   def stop_system
     stop_hypers
     super
@@ -90,8 +98,7 @@ class GlassStone < Stone
 
   def stop_hypers
     services_names.each { |service_name| system("svc -d /service/#{service_name}") }
-    sleep 1
-    fuser_hyper_ports("-k")
+    wait_for_hypers_to_stop
   end
 
   def status_hypers
@@ -186,7 +193,7 @@ $HTTP["host"] == "#{name}" {
       puts " = pid of process running a hyper on port #{port}"
       true
     else
-      puts "Could not find a hyper on port #{port}"
+      puts "No process listening on port #{port}"
       false
     end
   end
