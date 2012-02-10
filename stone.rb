@@ -50,8 +50,8 @@ class Stone
 
   def create_skeleton
     create_config_file
-    FileUtils.mkdir_p extent_directory
-    FileUtils.mkdir_p log_directory
+    if !File.exists?(extent_directory) then FileUtils.mkdir_p extent_directory end
+    if !File.exists?(log_directory) then FileUtils.mkdir_p log_directory end
     tranlog_directories.each do | tranlog_dir |
       if !File.exists?(tranlog_dir) then FileUtils.mkdir_p tranlog_dir end
     end
@@ -60,10 +60,10 @@ class Stone
   # Will remove everything in the stone's data directory!
   def destroy!
     fail "Can not destroy a running stone" if running?
-    FileUtils.rm_rf system_config_filename
-    FileUtils.rm_rf extent_directory
-    FileUtils.rm_rf log_directory
-    FileUtils.rm_rf tranlog_directories
+    FileUtils.rm_rf extent_filename
+    tranlog_directories.each do | tranlog_dir |
+      if tranlog_dir != '/dev/null' then FileUtils.rm_rf "#{tranlog_dir}/*" end
+    end
   end
 
   def recreate!
@@ -178,9 +178,11 @@ class Stone
   end
 
   def create_config_file
-    require 'erb'
-    File.open(system_config_filename, "w") do | file |
-      file.write(ERB.new(config_file_template).result(binding))
+    if not File.exists?(system_config_filename) then 
+      require 'erb'
+      File.open(system_config_filename, "w") do | file |
+        file.write(ERB.new(config_file_template).result(binding))
+      end
     end
     self
   end
