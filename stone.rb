@@ -110,6 +110,11 @@ class Stone
   end
 
   def restart
+    stop
+    start
+  end
+
+  def restart_system
     stop_system
     start_system
   end
