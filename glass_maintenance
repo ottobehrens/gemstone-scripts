@@ -1,0 +1,118 @@
+#!/bin/bash
+
+if [ -s $GEMSTONE/seaside/etc/gemstone.secret ]; then
+    . $GEMSTONE/seaside/etc/gemstone.secret
+else
+    echo 'Missing password file $GEMSTONE/seaside/etc/gemstone.secret'
+    exit 1
+fi
+
+# Requires the gemstone name as a parameter
+if [ "a$1" = "a" ]; then
+        echo 'Missing argument <gemstone name>'
+        exit 1
+fi
+
+GEMSTONE_NAME=$1
+echo "GEMSTONE_NAME is $GEMSTONE_NAME"
+
+# Make sure the environment is sane before we start up
+if [ -z $LANG ]; then echo "LANG is not set, bailing out"; exit 3; fi
+if [ -z $GEMSTONE_NAME ]; then echo "GEMSTONE_NAME is not set, bailing out"; exit 3; fi
+
+exec $GEMSTONE/bin/topaz -l -T300000 << EOF
+
+set user DataCurator pass $GEMSTONE_CURATOR_PASS gems $1
+
+display oops
+iferror where
+
+login
+
+run
+"record gems pid in the pid file"
+| file |
+(GsFile isServerDirectory: '$GEMSTONE_DATADIR') ifFalse: [ ^nil ].
+file := GsFile openWriteOnServer: '$GEMSTONE_DATADIR/${1}_maintenance_gem.pid'.
+file nextPutAll: (System gemVersionReport at: 'processId') printString.
+file cr.
+file close.
+(ObjectLogEntry
+  info: 'MTCE: startup'
+  object: 'pid: ', (System gemVersionReport at: 'processId') printString) addToLog.
+System commitTransaction 
+    ifFalse: [ 
+      System abortTransaction.
+      nil error: 'Could not commit ObjectLog entry' ].
+%
+
+run
+| count |
+true "enable for remote breakpoints and profiling"
+  ifTrue: [
+    GemToGemAnnouncement installStaticHandler.
+    Exception
+      installStaticException:
+        [:ex :cat :num :args | 
+          BreakpointNotification signal.
+          "needed to avoid infinite loop when resuming from a breakpoint"
+          ex _incrementBreakpointsToIgnore. ]
+      category: GemStoneError
+      number: 6005 "#rtErrCodeBreakpoint"
+      subtype: nil.
+   System commitTransaction ifFalse: [ nil error: 'Could not commit for GemToGemSignaling' ]].
+
+System transactionMode: #manualBegin.
+Exception 
+  installStaticException: 
+    [:ex :cat :num :args |
+      "Run the abort in a lowPriority process, since we must acquire the
+       transactionMutex."
+      [
+        GRPlatform current transactionMutex 
+          critical: [ 
+            GRPlatform current doAbortTransaction ].
+        System enableSignaledAbortError.
+      ] forkAt: Processor lowestPriority.
+    ]
+  category: GemStoneError
+  number: 6009 "#rtErrSignalAbort"
+  subtype: nil.
+System enableSignaledAbortError.
+"This thread is needed to handle the SigAbort exception, when the primary
+ thread is blocked. Assuming default 60 second STN_GEM_ABORT_TIMEOUT, wake 
+ up at 30 second intervals."
+[ 
+  [ true ] whileTrue: [ (Delay forSeconds: 30) wait ].
+] forkAt: Processor lowestPriority.
+
+count := 0.
+[true] whileTrue: [ [
+  "run maintenance tasks"
+  WAGemStoneMaintenanceTask performTasks: count.
+  "Sleep for a minute"
+  (Delay forSeconds: 60) wait.
+  count := count + 1] 
+    on: Error, Halt, BreakpointNotification
+    do: [:ex | 
+	  System inTransaction
+		ifTrue: [ 
+          DebuggerLogEntry createContinuationLabeled: 'MTCE continuation'.
+          System commitTransaction.
+          System beginTransaction ]
+        ifFalse: [
+          System beginTransaction.
+          DebuggerLogEntry createContinuationLabeled: 'MTCE continuation'.
+          System commitTransaction].
+      ex isResumable ifTrue: [ex resume]]].
+%
+run
+GemToGemAnnouncement uninstallStaticHandler.
+System beginTransaction.
+(ObjectLogEntry
+  fatal: 'MTCE: topaz exit'
+  object:
+    'pid: ', (System gemVersionReport at: 'processId') printString) addToLog.
+System commitTransaction.
+%
+EOF

@@ -38,15 +38,31 @@ class GlassStone < Stone
     File.join(@@gemstone_scripts_directory, 'run_hyper_service')
   end
 
+  def maintenance_service_file
+    File.join(@@gemstone_scripts_directory, 'run_maintenance_service')
+  end
+
+  def maintenance_service
+    "#{name}-maint"
+  end  
   def create_daemontools_structure
+    create_maintenance_daemontools_structure
     services_names.each do |service_name|
+      create_daemontools_structure_for(service_name, hyper_service_file)
+    end
+  end
+
+  def create_daemontools_structure_for(service_name, run_file)
       service_directory = "/service/#{service_name}"
       fail "Service directory #{service_directory} exists, please remove it manually, ensuring all services are stopped" if File.exists? service_directory
       mkdir_p "#{service_directory}/log"
       system("cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{service_directory}")
-      system("ln -s #{hyper_service_file} #{service_directory}/run")
+      system("ln -s #{run_file} #{service_directory}/run")
       touch "#{service_directory}/down"
-    end
+  end
+
+  def create_maintenance_daemontools_structure
+    create_daemontools_structure_for(maintenance_service, maintenance_service_file)
   end
 
   def remove_daemontools_structure
@@ -59,8 +75,26 @@ class GlassStone < Stone
   def start_hypers
     GlassStone.clear_status
     services_names.each { |service_name| 
+      start_service_named(service_name) }
+  end
+
+  def start_maintenance
+    GlassStone.clear_status
+    start_service_named(maintenance_service) 
+  end
+
+  def start_service_named(a_service_name)
       option = if name == 'development' then 'o' else 'u' end
-      system("svc -#{option} /service/#{service_name}") }
+      system("svc -#{option} /service/#{a_service_name}") 
+  end  
+
+  def start_maintenance_fg
+    raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG'] 
+    exec(glass_maintenance_command)
+  end
+
+  def glass_maintenance_command
+    "exec #{@@gemstone_scripts_directory}/glass_maintenance '#{name}'"
   end
 
   def start_hyper_fg(port)
