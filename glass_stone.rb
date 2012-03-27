@@ -43,7 +43,7 @@ class GlassStone < Stone
   end
 
   def maintenance_service
-    "#{name}-maint"
+    "#{name}-maintenance"
   end  
   def create_daemontools_structure
     create_maintenance_daemontools_structure
