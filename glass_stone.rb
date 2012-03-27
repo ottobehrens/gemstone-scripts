@@ -79,12 +79,12 @@ class GlassStone < Stone
   end
 
   def start_maintenance
-    GlassStone.clear_status
     start_service_named(maintenance_service) 
   end
 
   def start_service_named(a_service_name)
       option = if name == 'development' then 'o' else 'u' end
+      puts("Starting service #{a_service_name}") 
       system("svc -#{option} /service/#{a_service_name}") 
   end  
 
@@ -128,6 +128,10 @@ class GlassStone < Stone
     fail "Daemontools still attempting to start hypers, consider stop_hypers." if any_hyper_supposed_to_be_running?
     fail "Some hypers still running. Consider stopping them first." if any_hyper_running?
     super
+  end
+
+  def stop_maintenance
+    system("svc -d /service/#{maintenance_service}") 
   end
 
   def stop_hypers
@@ -209,6 +213,10 @@ $HTTP["host"] == "#{name}" {
 
   def services_names
     hyper_ports_lighty.collect { | port | "#{name}-#{port}" }
+  end
+
+  def status_maintenance
+    system("svstat /service/#{maintenance_service}")
   end
 
   def status_hyper_port(port)
