@@ -169,6 +169,7 @@ class GlassStone < Stone
   def status
     super
     status_hypers
+    status_maintenance
   end
 
   def lighty_config_template(ports)
