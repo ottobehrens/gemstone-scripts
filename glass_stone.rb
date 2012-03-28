@@ -109,6 +109,7 @@ class GlassStone < Stone
   def start_system
     super
     start_hypers
+    start_maintenance
   end
 
   def wait_for_hypers_to_stop(timeout_in_seconds = 20)
