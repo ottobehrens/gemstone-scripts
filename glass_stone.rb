@@ -1,5 +1,6 @@
 require 'rake'
 require File.join(File.dirname(__FILE__), 'stone')
+require 'net/http'
 
 class GlassStone < Stone
 
@@ -147,7 +148,7 @@ class GlassStone < Stone
   end
 
   def any_hyper_running?
-    !(hyper_ports.detect {| port | status_hyper_port(port)}).nil?
+    !(hyper_ports.detect {| port | process_listening?(port)}).nil?
   end
 
   def any_hyper_supposed_to_be_running?
@@ -223,23 +224,66 @@ $HTTP["host"] == "#{name}" {
 
   def status_hyper_port(port)
     system("svstat /service/#{name}-#{port}")
-    fuser_hyper_port(port)
+    process_listening?(port) and hyper_port_alive?(port)
   end
 
-  def fuser_hyper_ports(extra_flags = "")
-    hyper_ports.each do |port|
-      fuser_hyper_port(port, extra_flags)
-    end
+  def pid_of_process(port, extra_flags = "")
+    pid = `fuser #{extra_flags} -n tcp #{port} 2>/dev/null`.strip
+    fail "no process listening on port #{port}" if $? != 0
+    pid
   end
 
-  def fuser_hyper_port(port, extra_flags = "")
-    if system("fuser #{extra_flags} -n tcp #{port} 2> /dev/null") then
-      puts " = pid of process running a hyper on port #{port}"
+  def process_listening?(port, extra_flags = "")
+    begin
+      pid = pid_of_process(port, extra_flags)
+      puts "#{pid} = pid of process listening on port #{port}"
       true
-    else
+    rescue
       puts "No process listening on port #{port}"
       false
     end
+  end
+
+  def get_proc_stat_contents(port)
+    stat_file_name = "/proc/#{pid_of_process(port)}/stat"
+    contents = `cat #{stat_file_name}`
+    fail "could not cat #{stat_file_name}" if $? != 0
+    contents
+  end
+
+  def remember_proc_stat_contents(port)
+    @proc_stat_contents = get_proc_stat_contents(port)
+  end
+
+  def hyper_port_alive?(port)
+    remember_proc_stat_contents(port)
+    alive = http_get_ok?("http://localhost:#{port}") or some_cpu_activity?(port)
+    if not alive then puts "!!! hyper on port #{port} is dead" end
+    alive
+  end
+
+  def http_get_ok?(url)
+    uri = URI.parse(url)
+    req = Net::HTTP::Get.new("/")
+    begin
+      res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+      ok = res.code == '200'
+      if not ok then puts "Response code 200 expected from #{url} but got #{res.code}" end
+      ok
+    rescue Exception => e
+      puts "get #{url} failed with #{e.message}"
+      false
+    end
+  end
+    
+  def some_cpu_activity?(port)
+    tries = 1
+    activity = change_in_proc_stat_contents(port)
+    while not activity and tries < 3 do
+      tries = tries + 1
+      activity = change_in_proc_stat_contents(port)
+    end
+    puts "hyper on port #{port} #{if activity then '' else 'not ' end}busy with something big"
   end
 end
 
