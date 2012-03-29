@@ -48,8 +48,8 @@ class GlassStone < Stone
   end  
   def create_daemontools_structure
     create_maintenance_daemontools_structure
-    services_names.each do |service_name|
-      create_daemontools_structure_for(service_name, hyper_service_file)
+    services_names.each do |a_service_name|
+      create_daemontools_structure_for(a_service_name, hyper_service_file)
     end
   end
 
@@ -67,16 +67,19 @@ class GlassStone < Stone
   end
 
   def remove_daemontools_structure
-    services_names.each do |service_name|
-      service_directory = "/service/#{service_name}"
+    services_names.each do |a_service_name|
+      service_directory = "/service/#{a_service_name}"
       rm_rf service_directory if File.exists? service_directory
     end
   end
 
+  def start_hyper(port)
+    start_service_named(service_name(port))
+  end
+
   def start_hypers
     GlassStone.clear_status
-    services_names.each { |service_name| 
-      start_service_named(service_name) }
+    hyper_ports.each { |port| start_hyper(port) }
   end
 
   def start_maintenance
@@ -84,9 +87,9 @@ class GlassStone < Stone
   end
 
   def start_service_named(a_service_name)
-      option = if name == 'development' then 'o' else 'u' end
-      puts("Starting service #{a_service_name}") 
-      system("svc -#{option} /service/#{a_service_name}") 
+    option = if name == 'development' then 'o' else 'u' end
+    puts("starting service #{a_service_name}") 
+    system("svc -#{option} /service/#{a_service_name}") 
   end  
 
   def start_maintenance_fg
@@ -136,14 +139,19 @@ class GlassStone < Stone
     system("svc -d /service/#{maintenance_service}") 
   end
 
+  def stop_hyper(port)
+    puts("stopping service #{service_name(port)}") 
+    system("svc -d /service/#{service_name(port)}")
+  end
+
   def stop_hypers
-    services_names.each { |service_name| system("svc -d /service/#{service_name}") }
+    hyper_ports.each { |port| system("svc -d /service/#{service_name(port)}") }
     wait_for_hypers_to_stop
   end
 
   def status_hypers
     hyper_ports.each do | port |
-      status_hyper_port(port)
+      hyper_alive?(port)
     end
   end
 
@@ -151,10 +159,13 @@ class GlassStone < Stone
     !(hyper_ports.detect {| port | process_listening?(port)}).nil?
   end
 
+  def hyper_supposed_to_be_running?(port)
+    `svstat /service/#{service_name(port)}` =~ /service\/#{service_name(port)}: up/
+  end
+
   def any_hyper_supposed_to_be_running?
-    services_names.detect do |service_name|
-      !(`svstat /service/#{service_name}` =~ /service\/#{service_name}: up/).nil? and \
-      !File.exists?("/service/#{service_name}/down")
+    hyper_ports.detect do |port|
+      hyper_supposed_to_be_running?(port)
     end
   end
 
@@ -215,21 +226,42 @@ $HTTP["host"] == "#{name}" {
   end
 
   def services_names
-    hyper_ports_lighty.collect { | port | "#{name}-#{port}" }
+    hyper_ports_lighty.collect { | port | service_name(port) }
+  end
+
+  def service_name(port)
+    "#{name}-#{port}"
   end
 
   def status_maintenance
     system("svstat /service/#{maintenance_service}")
   end
 
-  def status_hyper_port(port)
+  def restart_hyper(port)
+    stop_hyper(port)
+    sleep 3
+    start_hyper(port)
+  end
+
+  def ensure_hypers_are_alive
+    hyper_ports.each do | port |
+      if hyper_supposed_to_be_running?(port) and not hyper_alive?(port) then
+        restart_hyper(port)
+      end
+    end
+  end
+
+  def hyper_alive?(port)
     system("svstat /service/#{name}-#{port}")
-    process_listening?(port) and hyper_port_alive?(port)
+    process_listening?(port) and hyper_responding?(port)
+  end
+
+  class NoProcessOnPortException < Exception
   end
 
   def pid_of_process(port, extra_flags = "")
     pid = `fuser #{extra_flags} -n tcp #{port} 2>/dev/null`.strip
-    fail "no process listening on port #{port}" if $? != 0
+    fail NoProcessOnPortException, "no process listening on port #{port}" if $? != 0
     pid
   end
 
@@ -238,7 +270,7 @@ $HTTP["host"] == "#{name}" {
       pid = pid_of_process(port, extra_flags)
       puts "#{pid} = pid of process listening on port #{port}"
       true
-    rescue
+    rescue Exception
       puts "No process listening on port #{port}"
       false
     end
@@ -255,7 +287,7 @@ $HTTP["host"] == "#{name}" {
     @proc_stat_contents = get_proc_stat_contents(port)
   end
 
-  def hyper_port_alive?(port)
+  def hyper_responding?(port)
     remember_proc_stat_contents(port)
     alive = http_get_ok?("http://localhost:#{port}") or some_cpu_activity?(port)
     if not alive then puts "!!! hyper on port #{port} is dead" end
@@ -277,13 +309,24 @@ $HTTP["host"] == "#{name}" {
   end
     
   def some_cpu_activity?(port)
-    tries = 1
-    activity = change_in_proc_stat_contents(port)
-    while not activity and tries < 3 do
-      tries = tries + 1
-      activity = change_in_proc_stat_contents(port)
+    begin
+      tries = 1
+      no_activity = proc_stat_contents_the_same?(port)
+      while no_activity and tries < 5 do
+        sleep 1
+        tries = tries + 1
+        no_activity = proc_stat_contents_the_same?(port)
+      end
+      puts "process on port #{port} #{if no_activity then 'not ' else '' end}busy with something big"
+      not no_activity
+    rescue NoProcessOnPortException => e
+      puts "cannot determine activity on port #{port} (#{e.message})"
+      false
     end
-    puts "hyper on port #{port} #{if activity then '' else 'not ' end}busy with something big"
+  end
+
+  def proc_stat_contents_the_same?(port)
+    @proc_stat_contents == get_proc_stat_contents(port)
   end
 end
 
