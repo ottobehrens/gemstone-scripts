@@ -90,7 +90,7 @@ class Topaz
   end
 
   def log_file_name(index)
-    "/tmp/#{@stone.name}/topaz.#{index}.log"
+    "#{@stone.log_directory}/topaz.#{index}.log"
   end
 
   def log_command_separately(index, io)
