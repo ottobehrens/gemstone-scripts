@@ -6,6 +6,15 @@ class GlassStone < Stone
 
   @@gemstone_scripts_directory = File.expand_path(File.dirname(__FILE__))
 
+  def GlassStone.svc(option, a_service_name)
+    fail "service directory #{a_service_name} does not exist" if not File.directory?(a_service_name)
+    fail "svc -#{option} #{a_service_name} failed" if not system("svc -#{option} #{a_service_name}") 
+  end
+
+  def GlassStone.clear_status
+    svc('o', '/service/clear')
+  end
+
   def bootstrapped_with_mc?
     result = topaz_commands(["run", "(System myUserProfile objectNamed: #MCPlatformSupport) notNil", "%"])
     if result.last =~ /^\[.* Boolean\] true/
@@ -27,10 +36,6 @@ class GlassStone < Stone
     "#{gemstone_installation_directory}/seaside/bin"
   end
 
-  def GlassStone.clear_status
-    system("svc -o /service/clear")
-  end
-
   def service_skeleton_template
     File.join(@@gemstone_scripts_directory, 'service_skeleton')
   end
@@ -46,6 +51,7 @@ class GlassStone < Stone
   def maintenance_service
     "/service/#{name}-maintenance"
   end  
+
   def create_daemontools_structure
     create_maintenance_daemontools_structure
     services_names.each do |a_service_name|
@@ -87,7 +93,7 @@ class GlassStone < Stone
   def start_service_named(a_service_name)
     option = if name == 'development' then 'o' else 'u' end
     puts("starting service #{a_service_name}") 
-    system("svc -#{option} #{a_service_name}") 
+    GlassStone.svc(option, a_service_name)
   end  
 
   def start_maintenance_fg
@@ -116,30 +122,31 @@ class GlassStone < Stone
 
   def wait_for_hypers_to_stop(timeout_in_seconds = 20)
     counter = 0
-    while any_hyper_process_running? and counter < timeout_in_seconds
+    while any_service_process_running? and (counter < timeout_in_seconds) do
       sleep 1
       counter = counter + 1
     end
-    fail "Waiting for counters to stop timeout." if counter = timeout_in_seconds
+    fail "Waiting for hypers to stop timeout (#{counter})" if counter == timeout_in_seconds
   end
 
   def stop_system
+    stop_maintenance
     stop_hypers
     super
   end
 
   def stop
-    fail "Hyper process still running; consider stop_hypers." if any_hyper_process_running?
+    fail "Hyper process still running; consider stop_hypers." if any_service_process_running?
     super
   end
 
   def stop_maintenance
-    system("svc -d #{maintenance_service}") 
+    GlassStone.svc('d', maintenance_service) 
   end
 
   def stop_hyper(port)
     puts("stopping hyper #{service_name(port)}") 
-    fail "stopping hyper failed" if not system("svc -d #{service_name(port)}")
+    GlassStone.svc('d', service_name(port))
   end
 
   def stop_hypers
@@ -154,13 +161,17 @@ class GlassStone < Stone
   end
 
   def hyper_process_is_running?(port)
-    `svstat #{service_name(port)}` =~ /#{service_name(port)}: up/
+    service_process_is_running?(service_name(port))
   end
 
-  def any_hyper_process_running?
-    hyper_ports.detect do |port|
-      hyper_process_is_running?(port)
-    end
+  def service_process_is_running?(a_service_name)
+    is_running = `svstat #{a_service_name}` =~ /#{a_service_name}: up/
+    fail "failed to determine if #{a_service_name} is running" if $? != 0
+    is_running
+  end
+
+  def any_service_process_running?
+    hyper_ports.detect { |port| hyper_process_is_running?(port) } or service_process_is_running?(maintenance_service)
   end
 
   def hyper_ports
