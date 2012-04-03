@@ -118,7 +118,7 @@ class GlassStone < Stone
 
   def wait_for_hypers_to_stop(timeout_in_seconds = 20)
     counter = 0
-    while any_hyper_running? and counter < timeout_in_seconds
+    while any_hyper_process_running? and counter < timeout_in_seconds
       sleep 1
       counter = counter + 1
     end
@@ -130,8 +130,7 @@ class GlassStone < Stone
   end
 
   def stop
-    fail "Daemontools still attempting to start hypers, consider stop_hypers." if any_hyper_supposed_to_be_running?
-    fail "Some hypers still running. Consider stopping them first." if any_hyper_running?
+    fail "Hyper process still running; consider stop_hypers." if any_hyper_process_running?
     super
   end
 
@@ -155,17 +154,13 @@ class GlassStone < Stone
     end
   end
 
-  def any_hyper_running?
-    !(hyper_ports.detect {| port | process_listening?(port)}).nil?
-  end
-
-  def hyper_supposed_to_be_running?(port)
+  def hyper_process_is_running?(port)
     `svstat /service/#{service_name(port)}` =~ /service\/#{service_name(port)}: up/
   end
 
-  def any_hyper_supposed_to_be_running?
+  def any_hyper_process_running?
     hyper_ports.detect do |port|
-      hyper_supposed_to_be_running?(port)
+      hyper_process_is_running?(port)
     end
   end
 
@@ -245,7 +240,7 @@ $HTTP["host"] == "#{name}" {
 
   def ensure_hypers_are_alive
     hyper_ports.each do | port |
-      if hyper_supposed_to_be_running?(port) and not hyper_alive?(port) then
+      if hyper_process_is_running?(port) and not hyper_alive?(port) then
         restart_hyper(port)
       end
     end
