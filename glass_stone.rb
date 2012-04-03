@@ -44,7 +44,7 @@ class GlassStone < Stone
   end
 
   def maintenance_service
-    "#{name}-maintenance"
+    "/service/#{name}-maintenance"
   end  
   def create_daemontools_structure
     create_maintenance_daemontools_structure
@@ -53,13 +53,12 @@ class GlassStone < Stone
     end
   end
 
-  def create_daemontools_structure_for(service_name, run_file)
-      service_directory = "/service/#{service_name}"
-      fail "Service directory #{service_directory} exists, please remove it manually, ensuring all services are stopped" if File.exists? service_directory
-      mkdir_p "#{service_directory}/log"
-      system("cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{service_directory}")
-      system("ln -s #{run_file} #{service_directory}/run")
-      touch "#{service_directory}/down"
+  def create_daemontools_structure_for(a_service_name, run_file)
+      fail "Service directory #{a_service_name} exists, please remove it manually, ensuring all services are stopped" if File.exists? a_service_name
+      mkdir_p "#{a_service_name}/log"
+      system("cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{a_service_name}")
+      system("ln -s #{run_file} #{a_service_name}/run")
+      touch "#{a_service_name}/down"
   end
 
   def create_maintenance_daemontools_structure
@@ -68,8 +67,7 @@ class GlassStone < Stone
 
   def remove_daemontools_structure
     services_names.each do |a_service_name|
-      service_directory = "/service/#{a_service_name}"
-      rm_rf service_directory if File.exists? service_directory
+      rm_rf a_service_name if File.exists? a_service_name
     end
   end
 
@@ -89,7 +87,7 @@ class GlassStone < Stone
   def start_service_named(a_service_name)
     option = if name == 'development' then 'o' else 'u' end
     puts("starting service #{a_service_name}") 
-    system("svc -#{option} /service/#{a_service_name}") 
+    system("svc -#{option} #{a_service_name}") 
   end  
 
   def start_maintenance_fg
@@ -122,6 +120,7 @@ class GlassStone < Stone
       sleep 1
       counter = counter + 1
     end
+    fail "Waiting for counters to stop timeout." if counter = timeout_in_seconds
   end
 
   def stop_system
@@ -135,16 +134,16 @@ class GlassStone < Stone
   end
 
   def stop_maintenance
-    system("svc -d /service/#{maintenance_service}") 
+    system("svc -d #{maintenance_service}") 
   end
 
   def stop_hyper(port)
-    puts("stopping service #{service_name(port)}") 
-    system("svc -d /service/#{service_name(port)}")
+    puts("stopping hyper #{service_name(port)}") 
+    fail "stopping hyper failed" if not system("svc -d #{service_name(port)}")
   end
 
   def stop_hypers
-    hyper_ports.each { |port| system("svc -d /service/#{service_name(port)}") }
+    hyper_ports.each { |port| stop_hyper(port) }
     wait_for_hypers_to_stop
   end
 
@@ -155,7 +154,7 @@ class GlassStone < Stone
   end
 
   def hyper_process_is_running?(port)
-    `svstat /service/#{service_name(port)}` =~ /service\/#{service_name(port)}: up/
+    `svstat #{service_name(port)}` =~ /#{service_name(port)}: up/
   end
 
   def any_hyper_process_running?
@@ -225,11 +224,11 @@ $HTTP["host"] == "#{name}" {
   end
 
   def service_name(port)
-    "#{name}-#{port}"
+    "/service/#{name}-#{port}"
   end
 
   def status_maintenance
-    system("svstat /service/#{maintenance_service}")
+    system("svstat #{maintenance_service}")
   end
 
   def restart_hyper(port)
