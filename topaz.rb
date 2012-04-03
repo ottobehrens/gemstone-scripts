@@ -45,7 +45,7 @@ class Topaz
     output[index].last
   end
 
-  def commands(topaz_commands_array, full_logfile="/tmp/topaz.log")
+  def commands(topaz_commands_array, full_logfile)
     fail "We expect the stone #{@stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !@stone.running?
     @stone.initialize_gemstone_environment
 
@@ -77,7 +77,7 @@ class Topaz
 
   def build_up_output_tuple(topaz_commands_array)
     0.upto(topaz_commands_array.size) do | index |
-      @output << [topaz_commands_array[index], read_output_file("/tmp/topaz.#{index}.log")]
+      @output << [topaz_commands_array[index], read_output_file(log_file_name(index))]
     end
   end
 
@@ -89,10 +89,13 @@ class Topaz
     "output append #{full_logfile}".execute_on_topaz_stream(io)
   end
 
+  def log_file_name(index)
+    "/tmp/#{@stone.name}/topaz.#{index}.log"
+  end
+
   def log_command_separately(index, io)
-    log_file_name = "/tmp/topaz.#{index}.log"
-    File.delete log_file_name if File.exist? log_file_name
-    "output push #{log_file_name}".execute_on_topaz_stream(io)
+    File.delete log_file_name(index) if File.exist? log_file_name(index)
+    "output push #{log_file_name(index)}".execute_on_topaz_stream(io)
   end
 
   def pop_log_output(io)
