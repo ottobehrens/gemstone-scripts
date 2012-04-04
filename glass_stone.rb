@@ -133,6 +133,12 @@ class GlassStone < Stone
     fail "Waiting for hypers to stop timeout (#{counter})" if counter == timeout_in_seconds
   end
 
+  def status_hypers
+    hyper_ports.each do | port |
+      hyper_alive?(port)
+    end
+  end
+
   def stop_services
     stop_maintenance
     stop_hypers
