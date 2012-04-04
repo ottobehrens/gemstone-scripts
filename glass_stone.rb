@@ -162,9 +162,6 @@ class GlassStone < Stone
     wait_for_hypers_to_stop
   end
 
-    end
-  end
-
   def hyper_process_is_running?(port)
     service_process_is_running?(service_name(port))
   end
