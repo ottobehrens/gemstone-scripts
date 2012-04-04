@@ -114,10 +114,14 @@ class GlassStone < Stone
     "exec #{@@gemstone_scripts_directory}/glass_hyper #{port} '#{name}'"
   end
 
-  def start_system
-    super
+  def start_services
     start_hypers
     start_maintenance
+  end
+
+  def start_system
+    super
+    start_services
   end
 
   def wait_for_hypers_to_stop(timeout_in_seconds = 20)
@@ -129,14 +133,18 @@ class GlassStone < Stone
     fail "Waiting for hypers to stop timeout (#{counter})" if counter == timeout_in_seconds
   end
 
-  def stop_system
+  def stop_services
     stop_maintenance
     stop_hypers
+  end
+
+  def stop_system
+    stop_services
     super
   end
 
   def stop
-    fail "Hyper process still running; consider stop_hypers." if any_service_process_running?
+    fail "Hyper process still running; consider stop_services." if any_service_process_running?
     super
   end
 
@@ -154,9 +162,6 @@ class GlassStone < Stone
     wait_for_hypers_to_stop
   end
 
-  def status_hypers
-    hyper_ports.each do | port |
-      hyper_alive?(port)
     end
   end
 
