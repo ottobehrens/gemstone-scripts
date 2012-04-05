@@ -86,6 +86,10 @@ class GlassStone < Stone
     hyper_ports.each { |port| start_hyper(port) }
   end
 
+  def kill_hypers
+    hyper_ports.each { |port| kill_service(service_name(port)) }
+  end
+
   def start_maintenance
     start_service_named(maintenance_service) 
   end
@@ -130,7 +134,9 @@ class GlassStone < Stone
       sleep 1
       counter = counter + 1
     end
-    fail "Waiting for hypers to stop timeout (#{counter})" if counter == timeout_in_seconds
+    if counter >= timeout_in_seconds then
+       kill_hypers
+    end
   end
 
   def status_hypers
@@ -155,12 +161,22 @@ class GlassStone < Stone
   end
 
   def stop_maintenance
-    GlassStone.svc('d', maintenance_service) 
+    stop_service(maintenance_service) 
   end
 
+  def stop_service(aService_name)
+    puts("stopping #{aService_name}") 
+    GlassStone.svc('d', aService_name)
+  end
+
+  def kill_service(aService_name)
+    puts("killing #{aService_name}") 
+    GlassStone.svc('k', aService_name)
+  end
+
+
   def stop_hyper(port)
-    puts("stopping hyper #{service_name(port)}") 
-    GlassStone.svc('d', service_name(port))
+    stop_service(service_name(port))
   end
 
   def stop_hypers
@@ -179,7 +195,7 @@ class GlassStone < Stone
   end
 
   def any_service_process_running?
-    hyper_ports.detect { |port| hyper_process_is_running?(port) } or service_process_is_running?(maintenance_service)
+    hyper_ports.any? { |port| hyper_process_is_running?(port) } or service_process_is_running?(maintenance_service)
   end
 
   def hyper_ports
