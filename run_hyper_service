@@ -12,4 +12,4 @@ ENV['LANG'] = 'en_ZA.UTF-8'
 
 puts "Starting up a hyper on port #{port} for #{stone_name}"
 stone = GlassStone.new(stone_name)
-stone.start_hyper_fg(port)
+stone.hyper_service(port).start
