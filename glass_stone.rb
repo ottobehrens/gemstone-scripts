@@ -144,23 +144,9 @@ class GlassStone < Stone
 
     def responding?
       remember_proc_stat_contents
-      alive = http_get_ok?("http://localhost:#{@port}") or some_cpu_activity?
+      alive = @stone.http_get_ok?("http://localhost:#{@port}") or some_cpu_activity?
       if not alive then puts "!!! hyper on port #{@port} is dead" end
       alive
-    end
-
-    def http_get_ok?(url)
-      uri = URI.parse(url)
-      req = Net::HTTP::Get.new("/")
-      begin
-        res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
-        ok = res.code == '200'
-        if not ok then puts "Response code 200 expected from #{url} but got #{res.code}" end
-        ok
-      rescue Exception => e
-        puts "get #{url} failed with #{e.message}"
-        false
-      end
     end
 
     def some_cpu_activity?
@@ -196,6 +182,20 @@ class GlassStone < Stone
 
     def glass_command
       "exec #{@@gemstone_scripts_directory}/glass_maintenance '#{@stone.name}'"
+    end
+  end
+
+  def http_get_ok?(url)
+    uri = URI.parse(url)
+    req = Net::HTTP::Get.new("/")
+    begin
+      res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+      ok = res.code == '200'
+      if not ok then puts "Response code 200 expected from #{url} but got #{res.code}" end
+      ok
+    rescue Exception => e
+      puts "get #{url} failed with #{e.message}"
+      false
     end
   end
 
