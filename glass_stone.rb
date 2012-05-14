@@ -255,6 +255,7 @@ class GlassStone < Stone
     end
     if counter >= timeout_in_seconds then
       kill_services(services)
+      sleep 3
     end
   end
 
