@@ -144,23 +144,9 @@ class GlassStone < Stone
 
     def responding?
       remember_proc_stat_contents
-      alive = http_get_ok?("http://localhost:#{@port}") or some_cpu_activity?
+      alive = @stone.http_get_ok?("http://localhost:#{@port}") or some_cpu_activity?
       if not alive then puts "!!! hyper on port #{@port} is dead" end
       alive
-    end
-
-    def http_get_ok?(url)
-      uri = URI.parse(url)
-      req = Net::HTTP::Get.new("/")
-      begin
-        res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
-        ok = res.code == '200'
-        if not ok then puts "Response code 200 expected from #{url} but got #{res.code}" end
-        ok
-      rescue Exception => e
-        puts "get #{url} failed with #{e.message}"
-        false
-      end
     end
 
     def some_cpu_activity?
@@ -196,6 +182,20 @@ class GlassStone < Stone
 
     def glass_command
       "exec #{@@gemstone_scripts_directory}/glass_maintenance '#{@stone.name}'"
+    end
+  end
+
+  def http_get_ok?(url)
+    uri = URI.parse(url)
+    req = Net::HTTP::Get.new("/")
+    begin
+      res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
+      ok = res.code == '200'
+      if not ok then puts "Response code 200 expected from #{url} but got #{res.code}" end
+      ok
+    rescue Exception => e
+      puts "get #{url} failed with #{e.message}"
+      false
     end
   end
 
@@ -282,10 +282,6 @@ class GlassStone < Stone
     (services || all_services).any? { | service | service.running? }
   end
 
-  def hyper_ports
-    hyper_ports_lighty
-  end
-
   def lighty_config
     Dir["/etc/lighttpd/conf-available/99-*.conf"].collect do | config_file_name |
       File.open(config_file_name) { | file | file.read }
@@ -299,39 +295,6 @@ class GlassStone < Stone
     else
       puts "#{name} not running"
     end
-  end
-
-  def lighty_config_template(ports)
-    return <<-TEMPLATE
-$HTTP["host"] == "#{name}" {
-  $HTTP["url"] =~ "^/documents/|^/tfiles/^|/resources/" {
-    alias.url += (
-      "/documents/" => "/var/local/gemstone/#{name}/documents/",
-      "/tfiles/" => "/tmp/#{name}/",
-      "/resources/" => "/home/wonka/projects/wonka/resources/"
-    )
-  } else $HTTP["url"] =~ ".*" {
-    proxy.server  = ( "" => ( 
-#{generate_ports(ports)}
-                          ) )
-  }
-}
-    TEMPLATE
-  end
-
-  def create_lighty_config(ports)
-    File.open("/etc/lighttpd/conf-available/99-#{name}.conf", "w+") do | file |
-      file.print(lighty_config_template(ports))
-    end
-  end
-
-  def remove_lighty_config
-    config = "/etc/lighttpd/conf-available/99-#{name}.conf"
-    File.delete(config) if File.exists? config
-  end
-
-  def generate_ports(ports)
-    ports.collect { | port | "\t\t\t( \"host\" => \"127.0.0.1\", \"port\" => #{port} ),\n" }
   end
 
   def hyper_ports_lighty
@@ -367,6 +330,5 @@ $HTTP["host"] == "#{name}" {
   def seaside_bin_directory
     "#{gemstone_installation_directory}/seaside/bin"
   end
-
 end
 
