@@ -35,7 +35,7 @@ end
 class Topaz
   attr_accessor :output
 
-  def initialize(stone, topaz_command="topaz -l -T 200000")
+  def initialize(stone, topaz_command="topaz -l -T 300000")
     @stone = stone
     @topaz_command = "$GEMSTONE/bin/#{topaz_command} 2>&1"
     @output = []
