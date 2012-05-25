@@ -6,10 +6,9 @@ require "#{File.dirname(File.readlink(my_path))}/glass_stone"
 service_name = File.dirname(my_path).split("/").last
 service_name =~ /([A-Za-z\.\-]*)-maint/
 stone_name = $1
-port = $2
 
 ENV['LANG'] = 'en_ZA.UTF-8'
 
 puts "Starting up a maintenance gem for #{stone_name}"
 stone = GlassStone.new(stone_name)
-stone.start_maintenance_fg
+stone.maintenance_service.start_fg
