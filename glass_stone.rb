@@ -145,7 +145,7 @@ class GlassStone < Stone
     def responding?
       remember_proc_stat_contents
       alive = @stone.http_get_ok?("http://localhost:#{@port}") or some_cpu_activity?
-      if not alive then puts "!!! hyper on port #{@port} is dead" end
+      unless alive then puts "!!! hyper on port #{@port} is dead" end
       alive
     end
 
@@ -155,10 +155,10 @@ class GlassStone < Stone
         no_activity = proc_stat_contents_the_same?
         while no_activity and tries < 5 do
           sleep 1
-          tries = tries + 1
+          tries += 1
           no_activity = proc_stat_contents_the_same?
         end
-        puts "process on port #{@port} #{if no_activity then 'not ' else '' end}busy with something big"
+        puts "process on port #{@port} #{no_activity ? 'not ' : ''}busy with something big"
         not no_activity
       rescue NoProcessOnPortException => e
         puts "cannot determine activity on port #{@port} (#{e.message})"
