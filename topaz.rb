@@ -19,6 +19,7 @@ end
 class String
   def execute_on_topaz_stream(topaz_stream)
     topaz_stream.puts(self)
+    puts self
   end
 end
 
@@ -52,9 +53,8 @@ class Topaz
     send_all_commands_to_topaz_and_exit(topaz_commands_array, full_logfile)
 
     if topaz_failed?
-      raise_error_with_full_log(full_logfile)
+      raise TopazError.new($?, @output[-5000..-1])
     else
-      build_up_output_tuple(topaz_commands_array)
       return @output
     end
   end
@@ -65,13 +65,25 @@ class Topaz
 
   def send_all_commands_to_topaz_and_exit(topaz_commands_array, full_logfile)
     IO.popen(@topaz_command, "w+") do |io|
-      log_everything_to(full_logfile, io)
+      read_and_output_thread = Thread.new { read_and_print_stuff(io) }
       topaz_commands_array.each_with_index do | command, index |
-        log_command_separately(index, io)
         command.execute_on_topaz_stream(io)
-        pop_log_output(io)
       end
+      read_and_output_thread.exit
       "exit".execute_on_topaz_stream(io)
+    end
+  end
+
+  def read_and_print_stuff(io)
+    while true
+      begin
+        result = io.readline
+        @output << result
+        puts result
+      rescue Error => exception
+        puts "read_and_print_stuff error #{exception}"
+        return
+      end
     end
   end
 
@@ -85,17 +97,12 @@ class Topaz
     raise TopazError.new($?, File.read(full_logfile)[-5000..-1])
   end
 
-  def log_everything_to(full_logfile, io)
-    "output append #{full_logfile}".execute_on_topaz_stream(io)
-  end
-
   def log_file_name(index)
     "#{@stone.log_directory}/topaz.#{index}.log"
   end
 
   def log_command_separately(index, io)
     File.delete log_file_name(index) if File.exist? log_file_name(index)
-    "output push #{log_file_name(index)}".execute_on_topaz_stream(io)
   end
 
   def pop_log_output(io)
