@@ -49,7 +49,7 @@ class Stone
   end
 
   def create_skeleton
-    create_config_file
+    if !File.exists?(system_config_filename) then create_config_file end
     if !File.exists?(extent_directory) then FileUtils.mkdir_p extent_directory end
     if !File.exists?(log_directory) then FileUtils.mkdir_p log_directory end
     tranlog_directories.each do | tranlog_dir |
@@ -182,14 +182,23 @@ class Stone
     "#{@gemstone_installation.config_directory}/#@name.conf"
   end
 
-  def create_config_file
-    if not File.exists?(system_config_filename) then 
-      require 'erb'
-      File.open(system_config_filename, "w") do | file |
-        file.write(ERB.new(config_file_template).result(binding))
-      end
+  def config_file_defaults
+    {'STN_TRAN_LOG_SIZES' => '1000, 1000',
+      'SHR_PAGE_CACHE_SIZE_KB' => '980000',
+      'GEM_TEMPOBJ_CACHE_SIZE' => '200000',
+      'STN_EPOCH_GC_ENABLED' => 'TRUE' }
+  end
+
+  def create_config_file(configuration_hash=config_file_defaults)
+    require 'erb'
+    File.open(system_config_filename, "w") do | file |
+      file.write(ERB.new(config_file_template).result(binding))
     end
     self
+  end
+
+  def update_config_file(extra_configuration)
+    create_config_file(config_file_defaults.merge(extra_configuration))
   end
 
   def config_file_template
