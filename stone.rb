@@ -138,10 +138,15 @@ class Stone
   def full_backup(file_name_prefix=backup_filename_prefix_for_today)
     result = run_topaz_command("System startCheckpointSync")
     fail "Could not start checkpoint, got #{result[-2].last}" if /\[.*Boolean\] true/ !~ result[-2].last.last
+    start_new_tranlog
+    run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{file_name_prefix}'")
+  end
+
+  def start_new_tranlog
     result = run_topaz_command("SystemRepository startNewLog")
     tranlog_number = Stone.tranlog_number_from(result[-2].last.last)
     fail "Could not start a new tranlog" if tranlog_number == -1
-    run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{file_name_prefix}'")
+    puts tranlog_number
   end
 
   def restore_latest_full_backup
@@ -153,9 +158,23 @@ class Stone
   end
 
   def restore_full_backup_from_named_file(file_name=backup_filename_for_today)
+    restore_without_commit(file_name)
+    commit_restore
+  end
+
+  def restore_without_commit(file_name)
     recreate!
-    run_topaz_commands("System abortTransaction. SystemRepository restoreFromBackup: '#{file_name}'")
-    run_topaz_commands("SystemRepository commitRestore")
+    run_topaz_command("System abortTransaction. SystemRepository restoreFromBackup: '#{file_name}'")
+  end
+
+  def commit_restore
+    run_topaz_commands('SystemRepository commitRestore')
+  end
+
+  def restore_archive_tranlogs_from_directory(directory)
+    # remember to 'restore_without_commit' first, and 'commit_restore' afterwards
+    run_topaz_command("SystemRepository setArchiveLogDirectories: #('#{directory}')")
+    run_topaz_command('SystemRepository restoreFromArchiveLogs')
   end
 
   def backup_filename_for_today
