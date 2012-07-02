@@ -138,15 +138,15 @@ class Stone
   def full_backup(file_name_prefix=backup_filename_prefix_for_today)
     result = run_topaz_command("System startCheckpointSync")
     fail "Could not start checkpoint, got #{result[-2].last}" if /\[.*Boolean\] true/ !~ result[-2].last.last
-    start_new_tranlog
+    start_new_tranlog(false)
     run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{file_name_prefix}'")
   end
 
-  def start_new_tranlog
+  def start_new_tranlog(display_tranlog_number=true)
     result = run_topaz_command("SystemRepository startNewLog")
     tranlog_number = Stone.tranlog_number_from(result[-2].last.last)
     fail "Could not start a new tranlog" if tranlog_number == -1
-    puts tranlog_number
+    if display_tranlog_number then puts tranlog_number end
   end
 
   def restore_latest_full_backup
