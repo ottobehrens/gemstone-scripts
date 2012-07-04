@@ -146,7 +146,7 @@ class Stone
     result = run_topaz_command("SystemRepository startNewLog")
     tranlog_number = Stone.tranlog_number_from(result[-2].last.last)
     fail "Could not start a new tranlog" if tranlog_number == -1
-    if display_tranlog_number then puts tranlog_number end
+    puts tranlog_number if display_tranlog_number
   end
 
   def restore_latest_full_backup
