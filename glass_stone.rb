@@ -221,25 +221,9 @@ class GlassStone < Stone
     end
   end
 
-  def start_services(services=nil)
+  def start_services
     GlassStone.clear_status
-    (services || all_services).each { | service | service.start }
-  end
-
-  def start_hypers
-    start_services(hyper_services)
-  end
-
-  def kill_services(services)
-    services.each { |service| service.kill }
-  end
-
-  def start_maintenance
-    maintenance_service.start
-  end
-
-  def stop_maintenance
-    maintenance_service.stop
+    all_services.each { | service | service.start }
   end
 
   def start_system
@@ -254,14 +238,14 @@ class GlassStone < Stone
       counter = counter + 1
     end
     if counter >= timeout_in_seconds then
-      kill_services(services)
+      services.each { |service| service.kill }
       sleep 3
     end
   end
 
-  def stop_services(services=nil)
-    (services || all_services).each { | service | service.stop }
-    wait_for_services_to_stop(services || all_services)
+  def stop_services
+    all_services.each { | service | service.stop }
+    wait_for_services_to_stop(all_services)
   end
 
   def stop_system
@@ -270,16 +254,12 @@ class GlassStone < Stone
   end
 
   def stop
-    fail "Service process still running; consider stop_services." if any_service_process_running?
+    fail "Service process still running; consider stop_services." if any_service_process_running?(all_services)
     super
   end
 
-  def stop_hypers
-    stop_services(hyper_services)
-  end
-
-  def any_service_process_running?(services=nil)
-    (services || all_services).any? { | service | service.running? }
+  def any_service_process_running?(services)
+    services.any? { | service | service.running? }
   end
 
   def lighty_config

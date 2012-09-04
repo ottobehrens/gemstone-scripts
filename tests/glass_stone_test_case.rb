@@ -17,11 +17,6 @@ class GlassStoneTestCase < BaseTestCase
     assert_equal(['9000', '9001'],stone.hyper_ports_lighty)
   end
 
-  def test_hyper_service_needs_lang_environment_variable
-    ENV['LANG'] = nil
-    assert_raises(RuntimeError) { GlassStone.new(nil).start_hyper_fg(1234) }
-  end
-
   def test_services_names
     stone, mock_stone = mock_stone_lighty_config(TEST_STONE_NAME)
     assert_equal(["#{TEST_STONE_NAME}-8000", "#{TEST_STONE_NAME}-1234"], stone.services_names)
@@ -31,14 +26,14 @@ class GlassStoneTestCase < BaseTestCase
     stone, mock_stone = mock_stone_lighty_config(TEST_STONE_NAME)
     mock_stone.should_receive(:sh).with("svc -u /service/#{TEST_STONE_NAME}-8000").once
     mock_stone.should_receive(:sh).with("svc -u /service/#{TEST_STONE_NAME}-1234").once
-    stone.start_hypers
+    stone.start_services
   end
 
   def test_hypers_start_for_second_stone
     stone, mock_stone = mock_stone_lighty_config('stone2.finworks.biz')
     mock_stone.should_receive(:sh).with("svc -u /service/stone2.finworks.biz-5000").once
     mock_stone.should_receive(:sh).with("svc -u /service/stone2.finworks.biz-9876").once
-    stone.start_hypers
+    stone.start_services
   end
 
   def mock_stone_lighty_config(stone_name)
@@ -97,7 +92,7 @@ class GlassStoneIntegrationTestCase < BaseTestCase
       sleep 1
       puts "Waiting for #{supervise_ok}"
     end
-    @stone.start_hypers
+    @stone.start_services
     sleep 3
     assert(@stone.any_hyper_supposed_to_be_running?) 
     # assert(@stone.any_hyper_running?) . This code assumes that the
@@ -108,7 +103,7 @@ class GlassStoneIntegrationTestCase < BaseTestCase
     # should also be bootstrapped. We must just then migrate the code that
     # builds the bootstrapped extent into gemstone-scritps as well. TODO
     # then.
-    @stone.stop_hypers
+    @stone.stop_services
     @stone.remove_daemontools_structure
     @stone.remove_lighty_config
   end
