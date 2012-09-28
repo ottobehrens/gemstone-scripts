@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 class GemStoneInstallation
   attr_reader :installation_directory, :config_directory, :installation_extent_directory, :base_log_directory, :backup_directory, :initial_extent_name
 

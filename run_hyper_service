@@ -8,7 +8,7 @@ service_name =~ /([A-Za-z\.\-]*)-([0-9]*)/
 stone_name = $1
 port = $2
 
-ENV['LANG'] = 'en_ZA.UTF-8'
+ENV['LANG'] = 'en_US.UTF-8'
 
 puts "Starting up a hyper on port #{port} for #{stone_name}"
 stone = GlassStone.new(stone_name)

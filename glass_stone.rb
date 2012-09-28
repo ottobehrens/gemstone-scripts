@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 require 'rake'
 require File.join(File.dirname(__FILE__), 'stone')
 require 'net/http'

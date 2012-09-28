@@ -1,3 +1,4 @@
+#!/usr/bin/ruby
 
 class TopazError < RuntimeError
   attr_accessor :exit_status, :output
