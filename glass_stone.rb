@@ -192,8 +192,8 @@ class GlassStone < Stone
     req = Net::HTTP::Get.new("/")
     begin
       res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
-      ok = res.code == '200'
-      if not ok then puts "Response code 200 expected from #{url} but got #{res.code}" end
+      ok = (res.code == '200' || res.code == '301') 
+      if not ok then puts "Response code 200/301 expected from #{url} but got #{res.code}" end
       ok
     rescue Exception => e
       puts "get #{url} failed with #{e.message}"
