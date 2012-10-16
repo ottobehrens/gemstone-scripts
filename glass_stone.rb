@@ -214,7 +214,7 @@ class GlassStone < Stone
   end
 
   def hyper_services
-    hyper_ports_lighty.collect { | port | hyper_service(port) }
+    service_ports_nginx.collect { | port | hyper_service(port) }
   end
 
   def create_daemontools_structure
@@ -264,12 +264,6 @@ class GlassStone < Stone
     services.any? { | service | service.running? }
   end
 
-  def lighty_config
-    Dir["/etc/lighttpd/conf-available/99-*.conf"].collect do | config_file_name |
-      File.open(config_file_name) { | file | file.read }
-    end
-  end
-
   def status
     if running?
       super
@@ -279,17 +273,23 @@ class GlassStone < Stone
     end
   end
 
-  def hyper_ports_lighty
-    lighty_config.detect(lambda{fail "Could not find ports for #{name} in #{lighty_config}"}) do | config |
-      /HTTP\["host"\]\s+==\s+"#{name}"\s+\{/ =~ config
-    end
-    $~.post_match.scan(/"port" => (\d{4})/).flatten
-  end
-
   def ensure_hypers_are_alive
     hyper_services.each do | service |
       service.ensure_alive
     end
+  end
+
+  def nginx_config
+    Dir["/etc/nginx/sites-available/99-*.conf"].collect do | config_file_name |
+      File.open(config_file_name) { | file | file.read }
+    end
+  end
+
+  def service_ports_nginx
+    nginx_config.detect(lambda{fail "Could not find ports for #{name} in #{nginx_config}"}) do | config |
+      /upstream #{name}.backend \{/ =~ config
+    end
+    $~.post_match.scan(/server localhost:(\d{4})/).flatten
   end
 
   def bootstrapped_with_mc?
