@@ -42,10 +42,6 @@ class Topaz
     @output = []
   end
 
-  def output_of_command(index)
-    output[index].last
-  end
-
   def commands(topaz_commands_array, full_logfile)
     fail "We expect the stone #{@stone.name} to be running if doing topaz commands. (Is this overly restrictive?)" if !@stone.running?
     @stone.initialize_gemstone_environment
@@ -53,7 +49,7 @@ class Topaz
     send_all_commands_to_topaz_and_exit(topaz_commands_array, full_logfile)
 
     if topaz_failed?
-      raise_error_with_full_log(full_logfile)
+      raise_error_with_last_log
     else
       build_up_output_tuple(topaz_commands_array)
       return @output
@@ -82,8 +78,8 @@ class Topaz
     end
   end
 
-  def raise_error_with_full_log(full_logfile)
-    raise TopazError.new($?, File.read(full_logfile)[-5000..-1])
+  def raise_error_with_last_log
+    raise TopazError.new($?, File.read(@most_recent_log_file_name))
   end
 
   def log_everything_to(full_logfile, io)
@@ -95,8 +91,9 @@ class Topaz
   end
 
   def log_command_separately(index, io)
-    File.delete log_file_name(index) if File.exist? log_file_name(index)
-    "output push #{log_file_name(index)}".execute_on_topaz_stream(io)
+    @most_recent_log_file_name = log_file_name(index)
+    File.delete @most_recent_log_file_name if File.exist? @most_recent_log_file_name
+    "output push #{@most_recent_log_file_name}".execute_on_topaz_stream(io)
   end
 
   def pop_log_output(io)
