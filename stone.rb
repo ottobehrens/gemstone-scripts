@@ -139,14 +139,14 @@ class Stone
 
   def full_backup(file_name_prefix=backup_filename_prefix_for_today)
     result = run_topaz_command("System startCheckpointSync")
-    fail "Could not start checkpoint, got #{result[-2].last}" if /\[.*Boolean\] true/ !~ result[-2].last.last
+    fail "Could not start checkpoint, got #{result}" if /\[.*Boolean\] true/ !~ result
     start_new_tranlog(false)
     run_topaz_commands("System abortTransaction", "SystemRepository fullBackupCompressedTo: '#{file_name_prefix}'")
   end
 
   def start_new_tranlog(display_tranlog_number=true)
     result = run_topaz_command("SystemRepository startNewLog")
-    tranlog_number = Stone.tranlog_number_from(result[-2].last.last)
+    tranlog_number = Stone.tranlog_number_from(result)
     fail "Could not start a new tranlog" if tranlog_number == -1
     puts tranlog_number if display_tranlog_number
   end
@@ -170,7 +170,7 @@ class Stone
   end
 
   def commit_restore
-    run_topaz_commands('SystemRepository commitRestore')
+    run_topaz_command('SystemRepository commitRestore')
   end
 
   def restore_archive_tranlogs_from_directory(directory)
@@ -291,7 +291,8 @@ class Stone
                   "iferr 1 stack",
                   "iferr 2 exit 3"],
                   user_commands)
-    Topaz.new(self).commands(commands, topaz_logfile)
+    result = Topaz.new(self).commands(commands, topaz_logfile)
+    result[-2].last.last
   end
 
   private

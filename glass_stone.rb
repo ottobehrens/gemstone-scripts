@@ -79,14 +79,10 @@ class GlassStone < Stone
       is_running
     end
 
-    def ensure_alive
-      if running? and not alive? then
-        restart
-      end
+    def monitor
     end
 
     def alive?
-      system("svstat #{directory}")
       true
     end
   end
@@ -107,6 +103,12 @@ class GlassStone < Stone
 
     def glass_command
       "exec #{@@gemstone_scripts_directory}/glass_hyper #{@port} '#{@stone.name}'"
+    end
+
+    def monitor
+      if running? and not alive? then
+        restart
+      end
     end
 
     def alive?
@@ -273,9 +275,9 @@ class GlassStone < Stone
     end
   end
 
-  def ensure_hypers_are_alive
-    hyper_services.each do | service |
-      service.ensure_alive
+  def monitor_services
+    all_services.each do | service |
+      service.monitor
     end
   end
 
@@ -294,7 +296,7 @@ class GlassStone < Stone
 
   def bootstrapped_with_mc?
     result = topaz_commands(["run", "(System myUserProfile objectNamed: #MCPlatformSupport) notNil", "%"])
-    if result.last =~ /^\[.* Boolean\] true/
+    if result =~ /^\[.* Boolean\] true/
       true
     else
       false
