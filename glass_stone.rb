@@ -187,6 +187,10 @@ class GlassStone < Stone
     def glass_command
       "exec #{@@gemstone_scripts_directory}/glass_maintenance '#{@stone.name}'"
     end
+
+    def alive?
+      system("svstat #{directory}")
+    end
   end
 
   def http_get_ok?(url)
