@@ -127,7 +127,7 @@ class GlassStone < Stone
     def process_listening?(extra_flags = "")
       begin
         pid = pid_of_process(extra_flags)
-        puts "#{pid} = pid of process listening on port #{@port}"
+        puts "#{pid} = pid of process listening on port #{@port} (up) (seconds)"
         true
       rescue Exception
         puts "No process listening on port #{@port}"
