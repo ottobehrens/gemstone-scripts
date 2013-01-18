@@ -306,15 +306,17 @@ class GlassStone < Stone
       false
     end
   end
+
+  alias :run_topaz_commands_raw :run_topaz_commands
   
   def run_topaz_commands(*commands)
     if bootstrapped_with_mc?
       super(commands.unshift("MCPlatformSupport autoCommit: false; autoMigrate: false"))
     else
-      super(commands)
+      run_topaz_commands_raw(commands)
     end
   end
-  
+
   def seaside_bin_directory
     "#{gemstone_installation_directory}/seaside/bin"
   end
