@@ -70,11 +70,15 @@ class GemStoneInstallation
     end
   end
 
+  def bin_directory
+    File.join(@installation_directory, "bin")
+  end
+
   def initial_extent
-    File.join(@installation_directory, "bin", @initial_extent_name)
+    File.join(bin_directory, @initial_extent_name)
   end
 
   def seaside_extent
-    File.join(@installation_directory, "bin", @seaside_extent_name)
+    File.join(bin_directory, @seaside_extent_name)
   end
 end
