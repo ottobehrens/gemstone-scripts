@@ -74,6 +74,10 @@ class GemStoneInstallation
     File.join(@installation_directory, "bin")
   end
 
+  def upgrade_directory
+    File.join(@installation_directory, "upgrade")
+  end
+
   def initial_extent
     File.join(bin_directory, @initial_extent_name)
   end
