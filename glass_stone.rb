@@ -27,6 +27,10 @@ class GlassStone < Stone
       "/service/#{@stone.name}"
     end
 
+    def run_symlink
+      File.join(directory, 'run')
+    end
+
     def service_skeleton_template
       File.join(@@gemstone_scripts_directory, 'service_skeleton')
     end
@@ -37,9 +41,16 @@ class GlassStone < Stone
       else
         mkdir_p "#{directory}/log"
         system("cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{directory}")
-        system("ln -s #{run_file_name} #{directory}/run")
+        fixup_run_symlink
         touch "#{directory}/down"
       end
+    end
+
+    def fixup_run_symlink
+      if File.exists?(run_symlink)
+        File.delete(run_symlink)
+      end
+      system("ln -s #{run_file_name} #{run_symlink}")
     end
 
     def svc(option)
