@@ -47,7 +47,7 @@ class GlassStone < Stone
     end
 
     def fixup_run_symlink
-      if File.exists?(run_symlink)
+      if File.exists?(run_symlink) or File.symlink?(run_symlink)
         File.delete(run_symlink)
       end
       system("ln -s #{run_file_name} #{run_symlink}")
