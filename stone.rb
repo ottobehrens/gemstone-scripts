@@ -152,11 +152,11 @@ class Stone
   end
 
   def restore_latest_full_backup
-    restore_full_backup_from_named_file
+    complete_restore
   end
 
   def restore_full_backup(stone_name, for_date=Date.today)
-    restore_full_backup_from_named_file(backup_filename(stone_name, for_date))
+    complete_restore(backup_filename(stone_name, for_date))
   end
 
   def restore_full_backup_from_named_file(file_name=backup_filename_for_today)
