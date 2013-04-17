@@ -152,19 +152,19 @@ class Stone
   end
 
   def restore_latest_full_backup
-    complete_restore
+    restore
   end
 
   def restore_full_backup(stone_name, for_date=Date.today)
-    complete_restore(backup_filename(stone_name, for_date))
+    restore(backup_filename(stone_name, for_date))
   end
 
   def restore_full_backup_from_named_file(file_name=backup_filename_for_today)
-    restore_without_commit(file_name)
+    restore_file_without_commit(file_name)
     commit_restore
   end
 
-  def restore_without_commit(file_name)
+  def restore_file_without_commit(file_name)
     recreate!
     run_topaz_command("System abortTransaction. SystemRepository restoreFromBackup: '#{file_name}'")
   end
@@ -174,7 +174,7 @@ class Stone
   end
 
   def restore_archive_tranlogs_from_directory(directory)
-    # remember to 'restore_without_commit' first, and 'commit_restore' afterwards
+    # remember to 'restore_file_without_commit' first, and 'commit_restore' afterwards
     run_topaz_command("SystemRepository setArchiveLogDirectories: #('#{directory}')")
     run_topaz_command('SystemRepository restoreFromArchiveLogs')
   end
