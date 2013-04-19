@@ -196,6 +196,7 @@ class Stone
   end
 
   def input_file(topaz_script_filename, login_first=true)
+    fail 'Please specify a topaz file that you want to input' if not topaz_script_filename
     topaz_commands(["input #{topaz_script_filename}", "commit"], login_first)
   end
 
