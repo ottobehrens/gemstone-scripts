@@ -297,7 +297,7 @@ class GlassStone < Stone
   end
 
   def nginx_config
-    Dir["/etc/nginx/sites-available/99-*.conf"].collect do | config_file_name |
+    Dir["/etc/nginx/sites-enabled/99-*.conf"].collect do | config_file_name |
       File.open(config_file_name) { | file | file.read }
     end
   end
