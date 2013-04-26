@@ -65,7 +65,7 @@ class GlassStone < Stone
 
     def start_fg
       raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG'] 
-      exec(glass_command)
+      exec(*glass_command)
     end
 
     def stop
@@ -113,7 +113,7 @@ class GlassStone < Stone
     end
 
     def glass_command
-      "exec #{@@gemstone_scripts_directory}/glass_hyper #{@port} '#{@stone.name}'"
+      ["#{@@gemstone_scripts_directory}/glass_hyper", @port, @stone.name]
     end
 
     def monitor
@@ -196,7 +196,7 @@ class GlassStone < Stone
     end
 
     def glass_command
-      "exec #{@@gemstone_scripts_directory}/glass_maintenance '#{@stone.name}'"
+      ["#{@@gemstone_scripts_directory}/glass_maintenance", @stone.name]
     end
 
     def alive?
