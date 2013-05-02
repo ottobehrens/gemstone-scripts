@@ -65,7 +65,12 @@ class GlassStone < Stone
 
     def start_fg
       raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG'] 
+      STDOUT.reopen("#{@stone.log_directory}/#{log_file_base}.log")
       exec(glass_command)
+    end
+
+    def log_file_base
+      self.class.name.split('::').last
     end
 
     def stop
@@ -107,6 +112,11 @@ class GlassStone < Stone
     def directory
       "#{super}-#{@port}"
     end
+
+    def log_file_base
+      "#{super}-#{@port}"
+    end
+    
 
     def run_file_name
       File.join(@@gemstone_scripts_directory, 'run_hyper_service')
