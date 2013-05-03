@@ -64,8 +64,10 @@ class GlassStone < Stone
     end  
 
     def start_fg
-      raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG'] 
-      STDOUT.reopen("#{@stone.log_directory}/#{log_file_base}.log")
+      raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG']
+      logfile = "#{@stone.log_directory}/#{log_file_base}.log"
+      STDOUT.reopen(logfile, 'a')
+      STDERR.reopen(logfile, 'a')
       exec(glass_command)
     end
 
