@@ -66,8 +66,11 @@ class GlassStone < Stone
     def start_fg
       raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG']
       logfile = "#{@stone.log_directory}/#{log_file_base}.log"
-      STDOUT.reopen(logfile, 'a')
-      STDERR.reopen(logfile, 'a')
+      [STDOUT, STDERR].each do
+        |stream|
+        stream.reopen(logfile, 'a')
+        stream.flush # Ensure any as-yet unflushed output hits the file
+      end
       exec(glass_command)
     end
 
