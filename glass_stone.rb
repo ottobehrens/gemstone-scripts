@@ -144,15 +144,15 @@ class GlassStone < Stone
     class NoProcessOnPortException < Exception
     end
 
-    def pid_of_process(extra_flags = "")
-      pid = `fuser #{extra_flags} -n tcp #{@port} 2>/dev/null`.strip
+    def pid_of_process_listening_on_port
+      pid = `fuser -n tcp #{@port} 2>/dev/null`.strip
       fail NoProcessOnPortException, "no process listening on port #{@port}" if $? != 0
       pid
     end
 
-    def process_listening?(extra_flags = "")
+    def process_listening?
       begin
-        pid = pid_of_process(extra_flags)
+        pid = pid_of_process_listening_on_port
         puts "#{pid} = pid of process listening on port #{@port} (up) (seconds)"
         true
       rescue Exception
@@ -162,10 +162,8 @@ class GlassStone < Stone
     end
 
     def get_proc_stat_contents
-      stat_file_name = "/proc/#{pid_of_process}/stat"
-      contents = `cat #{stat_file_name}`
-      fail "could not cat #{stat_file_name}" if $? != 0
-      contents
+      stat_file_name = "/proc/#{pid_of_process_listening_on_port}/stat"
+      IO::read(stat_file_name)
     end
 
     def responding?
