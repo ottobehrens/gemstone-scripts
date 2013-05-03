@@ -133,6 +133,7 @@ class GlassStone < Stone
 
     def monitor
       if running? and not alive? then
+        puts "Monitor is restarting #{pid_of_process_listening_on_port} at #{Time::now}"
         restart
       end
     end
@@ -153,7 +154,7 @@ class GlassStone < Stone
     def process_listening?
       begin
         pid = pid_of_process_listening_on_port
-        puts "#{pid} = pid of process listening on port #{@port} (up) (seconds)"
+        puts "#{pid} = pid of process listening on port #{@port}"
         true
       rescue Exception
         puts "No process listening on port #{@port}"
@@ -167,8 +168,8 @@ class GlassStone < Stone
     end
 
     def responding?
-      alive = @stone.http_get_ok?("http://localhost:#{@port}") or some_cpu_activity?
-      unless alive then puts "!!! hyper on port #{@port} is dead" end
+      alive = (@stone.http_get_ok?("http://localhost:#{@port}") or some_cpu_activity?)
+      puts "!!! hyper on port #{@port} is dead" unless alive
       alive
     end
 
