@@ -133,14 +133,14 @@ class GlassStone < Stone
 
     def monitor
       if running? and not alive?
-        puts "Monitor is restarting #{pid_of_process_listening_on_port} at #{Time::now}"
+        puts "Monitor is restarting #{pid_of_process} at #{Time::now}"
         send_dump_stack_signal
         restart
       end
     end
 
     def send_dump_stack_signal
-      Process.kill('USR1', pid_of_process_listening_on_port)
+      Process.kill('USR1', pid_of_process)
     end
 
     def alive?
@@ -150,7 +150,7 @@ class GlassStone < Stone
     class NoProcessOnPortException < Exception
     end
 
-    def pid_of_process_listening_on_port
+    def pid_of_process
       output = `fuser -n tcp #{@port} 2>/dev/null`
       fail NoProcessOnPortException, "no process listening on port #{@port}" if $? != 0
       output.strip.to_i
@@ -158,7 +158,7 @@ class GlassStone < Stone
 
     def process_listening?
       begin
-        pid = pid_of_process_listening_on_port
+        pid = pid_of_process
         puts "#{pid} = pid of process listening on port #{@port}"
         true
       rescue Exception
@@ -168,7 +168,7 @@ class GlassStone < Stone
     end
 
     def get_proc_stat_contents
-      stat_file_name = "/proc/#{pid_of_process_listening_on_port}/stat"
+      stat_file_name = "/proc/#{pid_of_process}/stat"
       IO::read(stat_file_name)
     end
 
