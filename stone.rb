@@ -169,7 +169,8 @@ class Stone
     commit_restore
   end
 
-  def restore_file_without_commit(file_name)
+  def restore_file_without_commit(arguments)
+    file_name = arguments[:file_name]
     recreate!
     run_topaz_command("System abortTransaction. SystemRepository restoreFromBackup: '#{file_name}'")
   end
