@@ -165,7 +165,7 @@ class Stone
   end
 
   def restore_full_backup_from_named_file(file_name=backup_filename_for_today)
-    restore_file_without_commit(file_name)
+    restore_file_without_commit({:file_name => file_name})
     commit_restore
   end
 
