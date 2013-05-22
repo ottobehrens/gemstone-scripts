@@ -2,6 +2,7 @@
 
 require 'rake'
 require File.join(File.dirname(__FILE__), 'stone')
+require 'fileutils'
 require 'net/http'
 
 class GlassStone < Stone
@@ -39,7 +40,7 @@ class GlassStone < Stone
       if File.exists? directory then
         puts "Service directory #{directory} already exists, not going to overwrite it"
       else
-        mkdir_p "#{directory}/log"
+        FileUtils.mkdir_p("#{directory}/log")
         system("cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{directory}")
         fixup_run_symlink
         touch "#{directory}/down"
