@@ -43,7 +43,7 @@ class GlassStone < Stone
         FileUtils.mkdir_p("#{directory}/log")
         system("cd #{service_skeleton_template}; find -path .git -prune -o -print | cpio -p #{directory}")
         fixup_run_symlink
-        touch "#{directory}/down"
+        FileUtils.touch("#{directory}/down")
       end
     end
 
