@@ -66,6 +66,7 @@ class GlassStone < Stone
 
     def start_fg
       raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG']
+      fixup_run_symlink # just temporary fix
       logfile = "#{@stone.log_directory}/#{log_file_base}.log"
       [STDOUT, STDERR].each do
         |stream|
