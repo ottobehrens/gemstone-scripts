@@ -6,6 +6,7 @@ require File.join(File.dirname(__FILE__), 'topaz')
 require 'date'
 require 'fileutils'
 
+
 class Stone
   attr_accessor :username, :password
   attr_reader :name
@@ -26,12 +27,12 @@ class Stone
     instance
   end
 
-  def initialize(name, gemstone_installation=GemStoneInstallation.current, username="DataCurator", password="swordfish")
+  def initialize(name, gemstone_installation=GemStoneInstallation.current, username='DataCurator', password='swordfish')
     @name = name
     @username = username
     @password = password
-    @log_directory = "#{gemstone_installation.base_log_directory}/#@name"
-    @data_directory = "#{gemstone_installation.installation_extent_directory}/#@name"
+    @log_directory = "#{gemstone_installation.base_log_directory}/#{@name}"
+    @data_directory = "#{gemstone_installation.installation_extent_directory}/#{@name}"
     @backup_directory = gemstone_installation.backup_directory
     @extent_name = gemstone_installation.initial_extent_name
     @gemstone_installation = gemstone_installation
@@ -51,11 +52,11 @@ class Stone
   end
 
   def create_skeleton
-    if !File.exists?(system_config_filename) then create_config_file end
-    if !File.exists?(extent_directory) then FileUtils.mkdir_p extent_directory end
-    if !File.exists?(log_directory) then FileUtils.mkdir_p log_directory end
+    create_config_file unless File.exists?(system_config_filename)
+    FileUtils.mkdir_p extent_directory unless File.exists?(extent_directory)
+    FileUtils.mkdir_p log_directory unless File.exists?(log_directory)
     tranlog_directories.each do | tranlog_dir |
-      if !File.exists?(tranlog_dir) then FileUtils.mkdir_p tranlog_dir end
+      FileUtils.mkdir_p tranlog_dir unless File.exists?(tranlog_dir)
     end
   end
 
@@ -64,7 +65,7 @@ class Stone
     fail "Can not destroy a running stone" if running?
     FileUtils.rm_rf extent_filename
     tranlog_directories.each do | tranlog_dir |
-      if tranlog_dir != '/dev/null' then FileUtils.rm_rf "#{tranlog_dir}/*" end
+      FileUtils.rm_rf "#{tranlog_dir}/*" if tranlog_dir != '/dev/null'
     end
   end
 
@@ -122,8 +123,8 @@ class Stone
   end
 
   def copy_to(copy_stone)
-    fail "You can not copy a running stone" if running?
-    fail "You can not copy to a stone that is running" if copy_stone.running?
+    fail 'You can not copy a running stone' if running?
+    fail 'You can not copy to a stone that is running' if copy_stone.running?
     copy_stone.create_skeleton
     FileUtils.install(extent_filename, copy_stone.extent_filename, :mode => 0660)
   end
@@ -268,7 +269,7 @@ class Stone
   end
 
   def run_topaz_commands(*commands)
-    topaz_commands(["run", commands.join(". "), "%"])
+    topaz_commands(['run', commands.join('. '), '%'])
   end
 
   def gs_sh(command_line, &block)
@@ -291,12 +292,12 @@ class Stone
 
   def topaz_commands(user_commands, login_first=true)
     commands = ["set u #{username} p #{password} gemstone #{name}" ]
-    commands << "login" if login_first
-    commands.push(["limit oops 100",
-                  "limit bytes 1000",
-                  "display oops",
-                  "iferr 1 stack",
-                  "iferr 2 exit 3"],
+    commands << 'login' if login_first
+    commands.push(['limit oops 100',
+                  'limit bytes 1000',
+                  'display oops',
+                  'iferr 1 stack',
+                  'iferr 2 exit 3'],
                   user_commands)
     result = Topaz.new(self).commands(commands, topaz_logfile)
     result[-2].last.last
@@ -305,7 +306,7 @@ class Stone
   private
 
   def log_command_line(command_line)
-    File.open(command_logfile, "a") { |file| file.puts "SHELL_CMD #{Date.today.strftime('%F %T')}: #{command_line}" }
+    File.open(command_logfile, 'a') { |file| file.puts "SHELL_CMD #{Date.today.strftime('%F %T')}: #{command_line}" }
   end
 
   def redirect_command_line_to_logfile(command_line)

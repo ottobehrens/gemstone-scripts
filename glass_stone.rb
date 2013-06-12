@@ -59,7 +59,7 @@ class GlassStone < Stone
     end
 
     def start
-      option = if @stone.name == 'development' then 'o' else 'u' end
+      option = @stone.name == 'development' ? 'o' : 'u'
       puts("starting service #{directory}") 
       svc(option)
     end  
@@ -231,7 +231,7 @@ class GlassStone < Stone
     begin
       res = Net::HTTP.start(uri.host, uri.port) { |http| http.request(req) }
       ok = (res.code == '200' || res.code == '301') 
-      if not ok then puts "Response code 200/301 expected from #{url} but got #{res.code}" end
+      unless ok then puts "Response code 200/301 expected from #{url} but got #{res.code}" end
       ok
     rescue Exception => e
       puts "get #{url} failed with #{e.message}"
@@ -277,7 +277,7 @@ class GlassStone < Stone
       sleep 1
       counter = counter + 1
     end
-    if counter >= timeout_in_seconds then
+    if counter >= timeout_in_seconds
       services.each { |service| service.kill }
       sleep 3
     end
@@ -294,7 +294,7 @@ class GlassStone < Stone
   end
 
   def stop
-    fail "Service process still running; consider stop_services." if any_service_process_running?(all_services)
+    fail 'Service process still running; consider stop_services.' if any_service_process_running?(all_services)
     super
   end
 
@@ -318,7 +318,7 @@ class GlassStone < Stone
   end
 
   def nginx_config
-    Dir["/etc/nginx/sites-enabled/99-*.conf"].collect do | config_file_name |
+    Dir['/etc/nginx/sites-enabled/99-*.conf'].collect do | config_file_name |
       File.open(config_file_name) { | file | file.read }
     end
   end
