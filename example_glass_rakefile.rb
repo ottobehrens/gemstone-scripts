@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 # Execute with:
 # rake -f example_glass_rakefile.rb -T
 
@@ -13,26 +15,26 @@ require 'glass_stone'
 verbose(false)
 
 task :default do
-  puts "Example tasks for managing a GemStone installation"
+  puts 'Example tasks for managing a GemStone installation'
 end
 
-desc "Create a new stone"
+desc 'Create a new stone'
 task :new_stone, :stone_name do |t, args|
   puts "Creating #{args.stone_name}"
   GlassStone.create(args.stone_name)
 end
 
-desc "Server status"
+desc 'Server status'
 task :status do
   GemStoneInstallation.current.status
 end
 
-desc "Stop netldi"
+desc 'Stop netldi'
 task :stopnetldi do
   GemStoneInstallation.current.stopnetldi
 end
 
-desc "Start netldi"
+desc 'Start netldi'
 task :startnetldi do
   GemStoneInstallation.current.startnetldi
 end

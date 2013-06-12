@@ -7,7 +7,7 @@ class GemStoneInstallation
 
   # The current, latest and greatest version
   def self.current
-    @@current ||= self.new("/opt/gemstone/product")
+    @@current ||= self.new('/opt/gemstone/product')
   end
 
   def self.current=(instance)
@@ -15,10 +15,10 @@ class GemStoneInstallation
   end
 
   def initialize(installation_directory,
-                 config_directory="/opt/gemstone/etc/conf.d",
-                 installation_extent_directory="/opt/gemstone/product/data",
-                 base_log_directory="/opt/gemstone/log",
-                 backup_directory="/opt/gemstone/backups",
+                 config_directory='/opt/gemstone/etc/conf.d',
+                 installation_extent_directory='/opt/gemstone/product/data',
+                 base_log_directory='/opt/gemstone/log',
+                 backup_directory='/opt/gemstone/backups',
                  initial_extent_name='extent0.dbf',
                  seaside_extent_name='extent0.seaside.dbf')
 
@@ -37,7 +37,7 @@ class GemStoneInstallation
 
   def stones
     Dir.glob("#{config_directory}/*").collect do | full_filename |
-      File.basename(full_filename).split(".conf").first
+      File.basename(full_filename).split('.conf').first
     end
   end
 
@@ -51,11 +51,11 @@ class GemStoneInstallation
   end
 
   def gslist
-    gs_sh "gslist -clv"
+    gs_sh 'gslist -clv'
   end
 
   def stopnetldi
-    gs_sh "stopnetldi | grep Info].*[Ss]erver"
+    gs_sh 'stopnetldi | grep Info].*[Ss]erver'
   end
 
   def startnetldi
@@ -71,11 +71,11 @@ class GemStoneInstallation
   end
 
   def bin_directory
-    File.join(@installation_directory, "bin")
+    File.join(@installation_directory, 'bin')
   end
 
   def upgrade_directory
-    File.join(@installation_directory, "upgrade")
+    File.join(@installation_directory, 'upgrade')
   end
 
   def initial_extent
