@@ -16,12 +16,14 @@ class Stone
   attr_reader :extent_name
 
   def Stone.existing(name, gemstone_installation=GemStoneInstallation.current)
-    fail "Stone does not exist" if not gemstone_installation.stones.include? name
+    fail 'Stone does not exist' unless gemstone_installation.stones.include?(name)
     new(name, gemstone_installation)
   end
 
   def Stone.create(name, gemstone_installation=GemStoneInstallation.current)
-    fail "Cannot create stone #{name}: the conf file already exists in #{gemstone_installation.config_directory}" if gemstone_installation.stones.include? name
+    error_message = "Cannot create stone #{name}: the conf file already exists " +
+                    "in #{gemstone_installation.config_directory}"
+    fail error_message if gemstone_installation.stones.include? name
     instance = new(name, gemstone_installation)
     instance.initialize_new_stone
     instance
@@ -62,7 +64,7 @@ class Stone
 
   # Will remove everything in the stone's data directory!
   def destroy!
-    fail "Can not destroy a running stone" if running?
+    fail 'Can not destroy a running stone' if running?
     FileUtils.rm_rf extent_filename
     tranlog_directories.each do | tranlog_dir |
       FileUtils.rm_rf "#{tranlog_dir}/*" if tranlog_dir != '/dev/null'
@@ -203,7 +205,7 @@ class Stone
   end
 
   def input_file(topaz_script_filename, login_first=true)
-    fail 'Please specify a topaz file that you want to input' if not topaz_script_filename
+    fail 'Please specify a topaz file that you want to input' unless topaz_script_filename
     topaz_commands(["input #{topaz_script_filename}", "commit"], login_first)
   end
 

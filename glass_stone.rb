@@ -8,8 +8,8 @@ require 'net/http'
 class GlassStone < Stone
 
   def GlassStone.svc(option, a_service_name)
-    fail "service directory #{a_service_name} does not exist" if not File.directory?(a_service_name)
-    fail "svc -#{option} #{a_service_name} failed" if not system("svc -#{option} #{a_service_name}") 
+    fail "service directory #{a_service_name} does not exist" unless File.directory?(a_service_name)
+    fail "svc -#{option} #{a_service_name} failed" unless system("svc -#{option} #{a_service_name}")
   end
 
   def GlassStone.clear_status
@@ -65,8 +65,10 @@ class GlassStone < Stone
     end  
 
     def start_fg
-      raise 'Environment variable LANG not set, you are probably running this from a restricted shell - bailing out' if not ENV['LANG']
-      fixup_run_symlink # just temporary fix
+      error_message = 'Environment variable LANG not set, you are probably running this from a ' +
+                      'restricted shell - bailing out'
+      raise error_message unless ENV['LANG']
+      fixup_run_symlink
       logfile = "#{@stone.log_directory}/#{log_file_base}.log"
       [STDOUT, STDERR].each do
         |stream|
@@ -160,13 +162,17 @@ class GlassStone < Stone
 
     def process_listening?
       begin
-        pid = pid_of_process
-        puts "#{pid} = pid of process listening on port #{@port}"
+        pid_of_process
+        stat_service
         true
       rescue Exception
-        puts "No process listening on port #{@port}"
+        stat_service
         false
       end
+    end
+
+    def stat_service
+      system("svstat #{directory}")
     end
 
     def get_proc_stat_contents

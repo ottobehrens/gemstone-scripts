@@ -5,10 +5,10 @@ class TopazError < RuntimeError
 
   def to_s
     # Get the child's exit code
-    puts "Topaz Error encountered: "
+    puts 'Topaz Error encountered: '
     puts @exit_status >> 8
     puts @output
-    puts "EOE"
+    puts 'EOE'
   end
 
   def initialize(exit_status, output)
@@ -36,7 +36,7 @@ end
 class Topaz
   attr_accessor :output
 
-  def initialize(stone, topaz_command="topaz -l -T 300000")
+  def initialize(stone, topaz_command='topaz -l -T 300000')
     @stone = stone
     @topaz_command = "$GEMSTONE/bin/#{topaz_command} 2>&1"
     @output = []
@@ -97,13 +97,14 @@ class Topaz
   end
 
   def pop_log_output(io)
-    "output pop".execute_on_topaz_stream(io)
+    'output pop'.execute_on_topaz_stream(io)
   end
 
   def read_output_file(name)
-    return [] if not File.exist? name
+    return [] unless File.exist? name
     lines = File.readlines(name)
-    fail "expected #{lines.last} to be 'output pop' or 'Logging out' or 'exit' in file named #{name}" if not match_expected(lines)
+    fail "expected #{lines.last} to be 'output pop' or 'Logging out' or 'exit' in file named #{name}" unless
+        match_expected(lines)
     lines[0..-2]
   end
 
