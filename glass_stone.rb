@@ -70,12 +70,19 @@ class GlassStone < Stone
       raise error_message unless ENV['LANG']
       fixup_run_symlink
       logfile = "#{@stone.log_directory}/#{log_file_base}.log"
+      write_start_time_to_log(logfile)
       [STDOUT, STDERR].each do
         |stream|
         stream.reopen(logfile, 'a')
         stream.flush # Ensure any as-yet unflushed output hits the file
       end
       exec(glass_command)
+    end
+
+    def write_start_time_to_log(logfile)
+      log = File.open(logfile, 'a')
+      log.write("Start time: #{Time.new.inspect}\n")
+      log.close unless log.closed?
     end
 
     def log_file_base
